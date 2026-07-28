@@ -1,0 +1,2318 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>2026 송호고 서로채움도서관 독서 마라톤</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- SheetJS (Excel) CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <!-- Lucide Icons CDN -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Noto+Sans+KR:wght@300;400;500;700;900&display=swap');
+    body {
+      font-family: 'Inter', 'Noto Sans KR', sans-serif;
+    }
+    .animate-fade-in {
+      animation: fadeIn 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+</head>
+<body class="min-h-screen bg-slate-50 text-slate-800 flex flex-col antialiased pb-20 md:pb-0">
+
+  <!-- GLOBAL NOTIFICATION SYSTEM -->
+  <div id="notification-bar" class="fixed top-4 right-4 z-50 flex items-center gap-3 px-5 py-4 rounded-xl shadow-xl border transition-all transform translate-y-[-150%] duration-300 hidden">
+    <div id="notification-icon"></div>
+    <span id="notification-text" class="font-medium"></span>
+  </div>
+
+  <!-- TEST CONTROLLER BAR (Initially hidden, only visible to administrators) -->
+  <div id="test-controller-bar" class="bg-slate-900 text-white text-xs px-4 py-2 hidden">
+    <div class="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-2">
+      <div class="flex items-center gap-2 flex-wrap">
+        <span class="bg-blue-600 px-2 py-0.5 rounded font-bold uppercase tracking-wider text-[10px]">테스트 컨트롤러</span>
+        <span>가상의 현재 시간: <strong id="simulation-date-display" class="text-yellow-300 font-mono">2026년 7월 29일</strong></span>
+        <span class="text-slate-400">| 대회 기간: 2026.07.27 ~ 2026.08.02</span>
+      </div>
+      <div class="flex items-center gap-3">
+        <button onclick="setSimulatedDate('2026-07-25')" class="bg-slate-800 hover:bg-slate-700 px-2 py-1 rounded text-[10px] transition font-medium border border-slate-700 text-slate-300">
+          개막 전(7/25)
+        </button>
+        <button onclick="setSimulatedDate('2026-07-29')" class="bg-blue-800 hover:bg-blue-700 px-2 py-1 rounded text-[10px] transition font-medium border border-blue-600 text-yellow-300">
+          대회 중(7/29)
+        </button>
+        <button onclick="setSimulatedDate('2026-08-01')" class="bg-purple-800 hover:bg-purple-700 px-2 py-1 rounded text-[10px] transition font-medium border border-purple-600 text-yellow-200">
+          만족도 조사(8/01)
+        </button>
+        <button onclick="setSimulatedDate('2026-08-05')" class="bg-slate-800 hover:bg-slate-700 px-2 py-1 rounded text-[10px] transition font-medium border border-slate-700 text-slate-300">
+          대회 종료(8/05)
+        </button>
+        <label class="flex items-center gap-1 cursor-pointer">
+          <input type="checkbox" id="real-time-checkbox" onchange="toggleRealTime(this)" class="rounded text-blue-600 focus:ring-0 w-3 h-3 bg-slate-800 border-slate-700">
+          <span class="text-[10px] text-slate-300 font-medium">기기 시간 적용</span>
+        </label>
+      </div>
+    </div>
+  </div>
+
+  <!-- HEADER -->
+  <header class="sticky top-0 z-40 bg-white border-b border-slate-200/80 shadow-sm">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex items-center justify-between h-16 sm:h-20">
+        <!-- Logo -->
+        <div class="flex items-center gap-3 cursor-pointer" onclick="navigate('main')">
+          <div class="p-2 sm:p-2.5 bg-blue-600 text-white rounded-2xl shadow-sm shadow-blue-500/20">
+            <i data-lucide="book-open" class="w-5 h-5 sm:w-6 sm:h-6"></i>
+          </div>
+          <div>
+            <h1 class="text-base sm:text-lg font-extrabold tracking-tight text-slate-900">2026 독서 마라톤</h1>
+            <p class="text-[10px] sm:text-xs text-slate-500 font-medium">지적 레이스 (7/27 ~ 8/2)</p>
+          </div>
+        </div>
+
+        <!-- Navigation Tabs (Desktop) -->
+        <nav id="desktop-nav" class="hidden md:flex items-center gap-1.5"></nav>
+
+        <!-- Right Header Panel -->
+        <div id="header-user-panel" class="flex items-center gap-3"></div>
+      </div>
+    </div>
+  </header>
+
+  <!-- MAIN CONTAINER -->
+  <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-10">
+    <div id="app-content"></div>
+  </main>
+
+  <!-- MOBILE BOTTOM NAVIGATION -->
+  <div id="mobile-nav" class="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 z-40 shadow-[0_-4px_12px_rgba(0,0,0,0.05)] h-16 grid grid-cols-5 hidden"></div>
+
+  <!-- POPUP MODAL: DETAILED VIEW -->
+  <div id="detail-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-white rounded-3xl max-w-2xl w-full shadow-2xl border border-slate-100 overflow-hidden transform transition-all">
+      <div class="p-6 bg-slate-50 border-b border-slate-100 flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <span class="p-2 bg-blue-50 rounded-xl">
+            <i data-lucide="book-open" class="w-5 h-5 text-blue-600"></i>
+          </span>
+          <div>
+            <h3 class="text-lg font-extrabold text-slate-950 tracking-tight">독서일지 상세 기록</h3>
+            <p id="modal-log-id" class="text-xs text-slate-400 font-mono mt-0.5"></p>
+          </div>
+        </div>
+        <button onclick="closeModal()" class="w-8 h-8 rounded-full bg-slate-200/50 hover:bg-slate-200 flex items-center justify-center text-slate-600 transition text-sm font-bold">✕</button>
+      </div>
+
+      <div class="p-6 sm:p-8 space-y-6 max-h-[70vh] overflow-y-auto">
+        <div class="grid grid-cols-2 gap-4 bg-slate-50 p-4 rounded-2xl border border-slate-100">
+          <div>
+            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">독서 마라토너</span>
+            <p id="modal-user-name" class="text-sm font-extrabold text-slate-800 flex items-center gap-1.5 mt-0.5"></p>
+            <p id="modal-user-no" class="text-[10px] text-slate-400 font-mono mt-0.5"></p>
+          </div>
+          <div class="text-right">
+            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">기록 정보</span>
+            <p id="modal-date" class="text-sm font-bold text-slate-800 font-mono mt-0.5"></p>
+            <p id="modal-length" class="text-[10px] text-slate-500 font-bold mt-0.5"></p>
+          </div>
+        </div>
+
+        <div class="border-l-4 border-blue-600 pl-4 space-y-1">
+          <span class="text-[10px] font-bold text-blue-600 uppercase tracking-wider">도서 상세</span>
+          <h4 id="modal-book-title" class="text-xl font-extrabold text-slate-900 leading-tight"></h4>
+          <p id="modal-book-author" class="text-sm text-slate-500 font-medium"></p>
+        </div>
+
+        <div class="space-y-2">
+          <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">독서 노트 및 느낀 점</span>
+          <div id="modal-content" class="bg-slate-50/50 p-5 rounded-2xl border border-slate-100 text-sm font-medium text-slate-700 leading-relaxed whitespace-pre-wrap"></div>
+        </div>
+      </div>
+
+      <div class="p-6 bg-slate-50 border-t border-slate-100 flex justify-between items-center">
+        <div id="modal-admin-actions" class="flex gap-2"></div>
+        <button onclick="closeModal()" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs rounded-xl transition">닫기</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <footer class="mt-auto bg-slate-900 text-slate-400 py-10 border-t border-slate-800/80">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-4">
+      <p class="text-xs sm:text-sm font-bold text-slate-300">
+        2026학년도 송호고등학교 서로채움도서관 '독서 마라톤 대장정'
+      </p>
+      <div class="flex justify-center items-center gap-4 text-[11px] text-slate-500 font-medium">
+        <span>대상: 학생 및 전 교직원</span>
+        <span>•</span>
+        <span>기간: 2026.07.27 - 2026.08.02</span>
+        <span>•</span>
+        <span>Paperless System v3.0</span>
+      </div>
+      <p class="text-[10px] text-slate-600">
+        © 2026 Songho High School. All rights reserved. 본 시스템의 무단 복제를 금지합니다.
+      </p>
+    </div>
+  </footer>
+
+  <!-- CORE SCRIPT -->
+  <script>
+    // ----------------------------------------------------------------------
+    // CONSTANTS & CONFIG
+    // ----------------------------------------------------------------------
+    // 날짜 설정: 2026년 7월 27일 ~ 2026년 8월 2일
+    const START_DATE = new Date('2026-07-27T00:00:00');
+    const END_DATE = new Date('2026-08-02T23:59:59');
+    const STORAGE_PREFIX = 'reading_marathon_2026_';
+
+    // Dynamic Admin Password loading (defaults to admin2026!)
+    let adminPassword = localStorage.getItem(`${STORAGE_PREFIX}admin_password`) || 'admin2026!';
+
+    // Default Prize Items (Can be dynamically edited by 사서교사)
+    const DEFAULT_PRIZE_ITEMS = [
+      { id: 'prize-1', name: '블라인드북 1호', count: 1 },
+      { id: 'prize-2', name: '블라인드북 2호', count: 1 },
+      { id: 'prize-3', name: '블라인드북 3호', count: 1 },
+      { id: 'prize-4', name: '블라인드북 4호', count: 1 },
+      { id: 'prize-5', name: '블라인드북 5호', count: 1 },
+      { id: 'prize-6', name: '한정판 도서 1호', count: 1 },
+      { id: 'prize-7', name: '한정판 도서 2호', count: 1 },
+      { id: 'prize-8', name: '한정판 도서 3호', count: 1 },
+      { id: 'prize-9', name: '한정판 도서 4호', count: 1 },
+      { id: 'prize-10', name: '한정판 도서 5호', count: 1 },
+      { id: 'prize-11', name: '독서 마라톤 격려상', count: 10 }
+    ];
+
+    const INITIAL_LOGS = [
+      {
+        id: 'log-1',
+        userId: '20101',
+        userName: '김철수',
+        userRole: 'student',
+        userNo: '20101',
+        date: '2026-07-27',
+        title: '데미안',
+        author: '헤르만 헤세',
+        range: '1 ~ 30쪽',
+        content: '새는 알에서 나오려고 투쟁한다. 알은 세계이다. 태어나려는 자는 하나의 세계를 깨뜨려야 한다. 고등학교 시절 내 정체성에 대해 다시 고민해보게 만드는 강렬한 도입부였다. 일주일 간의 독서 마라톤 완주를 다짐해본다.',
+        length: 128
+      },
+      {
+        id: 'log-2',
+        userId: '20101',
+        userName: '김철수',
+        userRole: 'student',
+        userNo: '20101',
+        date: '2026-07-28',
+        title: '데미안',
+        author: '헤르만 헤세',
+        range: '31 ~ 75쪽',
+        content: '싱클레어가 크로머의 협박에서 벗어나며 겪는 심리적 해방감이 무척 실감 났다. 죄악과 고통을 공유하는 두 세계의 대비 속에서, 나는 어떤 세계에 더 가깝게 발을 디디고 있는지 생각했다. 매일 글 쓰는 게 생각보다 재미있다.',
+        length: 130
+      },
+      {
+        id: 'log-3',
+        userId: '20102',
+        userName: '이영희',
+        userRole: 'student',
+        userNo: '20102',
+        date: '2026-07-27',
+        title: '사피엔스',
+        author: '유발 하라리',
+        range: 'Chapter 1',
+        content: '인지혁명라는 개념이 신선했다. 인류가 보잘것없는 유인원에서 지구의 지배자가 된 원동력이 상상의 질서를 믿는 능력에 있다는 점이 매우 흥미롭다. 50자 채우는 것은 아주 가뿐하다. 책 두께만큼 유익한 시간이 될 것 같다.',
+        length: 132
+      },
+      {
+        id: 'log-4',
+        userId: 'T1001',
+        userName: '박영민 교사',
+        userRole: 'staff',
+        userNo: 'T1001',
+        date: '2026-07-27',
+        title: '트렌드 코리아 2026',
+        author: '김난도',
+        range: '30 ~ 80쪽',
+        content: '미래 사회의 변화 양상과 학교 현장에서 학생들이 마주할 새로운 트렌드를 짚어보기 위해 독서를 시작했다. 교직원도 참여할 수 있는 독서 프로그램이 생겨 무척 반갑다. 아이들과 함께 페이스를 잃지 않고 완주하고 싶다.',
+        length: 130
+      },
+      {
+        id: 'log-5',
+        userId: '20215',
+        userName: '정민우',
+        userRole: 'student',
+        userNo: '20215',
+        date: '2026-07-29',
+        title: '코스모스',
+        author: '칼 세이건',
+        range: '1장 마당을 나온 암탉의 마음으로',
+        content: '우주의 거대함 앞에 인간이라는 존재는 한낱 먼지와도 같다는 문구가 가슴을 때린다. 과학 도서이지만 한 편의 시를 읽는 듯한 유려한 문체에 매료되었다. 매일 밤마다 조금씩 읽어서 끝내보려 한다. 화이팅!',
+        length: 122
+      }
+    ];
+
+    // ----------------------------------------------------------------------
+    // STATE
+    // ----------------------------------------------------------------------
+    let currentUser = null;
+    let logs = [];
+    let registeredUsers = []; // 영구 축적 가상 데이터베이스 회원 테이블
+    let prizeItems = []; // 동적으로 수정 가능한 경품 목록 데이터
+    let activeTab = 'main';
+    let isAdminUnlocked = false;
+    let adminMenu = 'dashboard';
+    
+    let mockCurrentDate = new Date('2026-07-29T12:00:00');
+    let useRealTime = false;
+
+    // Search and Sort
+    let searchUserKeyword = '';
+    let searchLogKeyword = '';
+    let logSortOrder = 'desc';
+    let userSortOrder = 'desc';
+
+    // Survey rating temporary states
+    let surveyRatingProg = 0;
+    let surveyRatingWeb = 0;
+
+    // Temp Form editing
+    let editingLog = null;
+    let logForm = { title: '', author: '', range: '', content: '' };
+
+    // ----------------------------------------------------------------------
+    // INIT
+    // ----------------------------------------------------------------------
+    window.addEventListener('DOMContentLoaded', () => {
+      // Load user
+      const savedUser = localStorage.getItem(`${STORAGE_PREFIX}session`);
+      if (savedUser) currentUser = JSON.parse(savedUser);
+
+      // Load registered users from Virtual DB file
+      const savedUsers = localStorage.getItem(`${STORAGE_PREFIX}users`);
+      if (savedUsers) {
+        registeredUsers = JSON.parse(savedUsers);
+      } else {
+        registeredUsers = [
+          { id: '20101', name: '김철수', role: 'student', signupDate: '2026-07-27' },
+          { id: '20102', name: '이영희', role: 'student', signupDate: '2026-07-27' },
+          { id: 'T1001', name: '박영민 교사', role: 'staff', signupDate: '2026-07-27' },
+          { id: '20215', name: '정민우', role: 'student', signupDate: '2026-07-28' }
+        ];
+        localStorage.setItem(`${STORAGE_PREFIX}users`, JSON.stringify(registeredUsers));
+      }
+
+      // Load Dynamic Prize Items
+      const savedPrizes = localStorage.getItem(`${STORAGE_PREFIX}prize_items`);
+      if (savedPrizes) {
+        prizeItems = JSON.parse(savedPrizes);
+      } else {
+        prizeItems = DEFAULT_PRIZE_ITEMS;
+        localStorage.setItem(`${STORAGE_PREFIX}prize_items`, JSON.stringify(DEFAULT_PRIZE_ITEMS));
+      }
+
+      // Load logs
+      const savedLogs = localStorage.getItem(`${STORAGE_PREFIX}logs`);
+      if (savedLogs) {
+        logs = JSON.parse(savedLogs);
+      } else {
+        logs = INITIAL_LOGS;
+        localStorage.setItem(`${STORAGE_PREFIX}logs`, JSON.stringify(logs));
+      }
+
+      // Load admin unlocked
+      const adminSession = localStorage.getItem(`${STORAGE_PREFIX}admin_unlocked`);
+      if (adminSession === 'true') isAdminUnlocked = true;
+
+      // Ensure mock survey data exists for test demo
+      initializeMockSurveys();
+
+      updateTimeDisplay();
+      renderApp();
+    });
+
+    function initializeMockSurveys() {
+      const mockUsers = [
+        { id: '20101', name: '김철수', role: 'student', progRating: 5, webRating: 5, feedback: '독서 습관 형성에 큰 도움이 되었습니다!' },
+        { id: '20102', name: '이영희', role: 'student', progRating: 4, webRating: 5, feedback: 'UI가 너무 깔끔하고 마음에 들어요.' },
+        { id: 'T1001', name: '박영민 교사', role: 'staff', progRating: 5, webRating: 4, feedback: '학생들과 함께 호흡할 수 있어 기뻤습니다.' },
+        { id: '20215', name: '정민우', role: 'student', progRating: 5, webRating: 5, feedback: '다음에도 또 참여하고 싶어요!' }
+      ];
+
+      mockUsers.forEach(u => {
+        const key = `${STORAGE_PREFIX}survey_submitted_${u.id}`;
+        const dataKey = `${STORAGE_PREFIX}survey_data_${u.id}`;
+        if (!localStorage.getItem(key)) {
+          localStorage.setItem(key, 'true');
+          const myLogsCount = INITIAL_LOGS.filter(l => l.userId === u.id).length || 1;
+          localStorage.setItem(dataKey, JSON.stringify({
+            progRating: u.progRating,
+            webRating: u.webRating,
+            feedback: u.feedback,
+            tickets: myLogsCount,
+            date: '2026-08-01',
+            userName: u.name,
+            userRole: u.role
+          }));
+        }
+      });
+    }
+
+    function getSurveySubmissions() {
+      const submissions = [];
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key && key.startsWith(`${STORAGE_PREFIX}survey_data_`)) {
+          const userId = key.replace(`${STORAGE_PREFIX}survey_data_`, '');
+          try {
+            const data = JSON.parse(localStorage.getItem(key));
+            let name = data.userName;
+            let role = data.userRole;
+            if (!name) {
+              const matchedLog = logs.find(l => l.userId === userId);
+              name = matchedLog ? matchedLog.userName : (userId === currentUser?.id ? currentUser.name : '무명 러너');
+              role = matchedLog ? matchedLog.userRole : (userId === currentUser?.id ? currentUser.role : 'student');
+            }
+            const userLogs = logs.filter(l => l.userId === userId);
+            const uniqueDates = new Set(userLogs.map(l => l.date));
+            const realTickets = uniqueDates.size;
+            
+            submissions.push({
+              userId,
+              userName: name,
+              userRole: role,
+              tickets: realTickets > 0 ? realTickets : (data.tickets || 1),
+              progRating: data.progRating,
+              webRating: data.webRating,
+              feedback: data.feedback,
+              date: data.date
+            });
+          } catch (e) {
+            console.error(e);
+          }
+        }
+      }
+      return submissions;
+    }
+
+    // SYSTEM DATE MANAGEMENT
+    // ----------------------------------------------------------------------
+    function getSystemDate() {
+      return useRealTime ? new Date() : mockCurrentDate;
+    }
+
+    function getTodayDateString() {
+      const d = getSystemDate();
+      const year = d.getFullYear();
+      const month = String(d.getMonth() + 1).padStart(2, '0');
+      const day = String(d.getDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
+    }
+
+    function isMarathonPeriod() {
+      const now = getSystemDate();
+      return now >= START_DATE && now <= END_DATE;
+    }
+
+    function isMarathonEnded() {
+      return getSystemDate() > END_DATE;
+    }
+
+    function getRemainingDays() {
+      const now = getSystemDate();
+      if (now > END_DATE) return 0;
+      const diffTime = END_DATE.getTime() - now.getTime();
+      return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    }
+
+    function setSimulatedDate(dateStr) {
+      mockCurrentDate = new Date(dateStr + 'T12:00:00');
+      useRealTime = false;
+      document.getElementById('real-time-checkbox').checked = false;
+      updateTimeDisplay();
+      renderApp();
+      showNotification(`가상 시스템 일자가 ${dateStr}로 세팅되었습니다.`);
+    }
+
+    // ----------------------------------------------------------------------
+    // LOGOUT / EVENT HANDLERS
+    // ----------------------------------------------------------------------
+    function toggleRealTime(checkbox) {
+      useRealTime = checkbox.checked;
+      updateTimeDisplay();
+      renderApp();
+      showNotification(useRealTime ? '실제 기기 시각이 적용되었습니다.' : '가상 모의 시간이 적용되었습니다.');
+    }
+
+    function updateTimeDisplay() {
+      const display = document.getElementById('simulation-date-display');
+      if (useRealTime) {
+        display.innerText = new Date().toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric' }) + " (기기 실시간)";
+      } else {
+        display.innerText = mockCurrentDate.toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric' });
+      }
+    }
+
+    function handleLoginSubmit(e) {
+      e.preventDefault();
+      const role = document.getElementById('login-role').value;
+      const name = document.getElementById('login-name').value.trim();
+      const number = document.getElementById('login-number').value.trim();
+
+      if (!name || !number) {
+        showNotification('이름과 학번/교직원번호를 정확히 입력해 주세요.', 'error');
+        return;
+      }
+
+      currentUser = {
+        id: number,
+        name: name,
+        role: role
+      };
+
+      localStorage.setItem(`${STORAGE_PREFIX}session`, JSON.stringify(currentUser));
+
+      // Virtual DB 회원 정보 업데이트
+      if (!registeredUsers.some(u => u.id === number)) {
+        registeredUsers.push({
+          id: number,
+          name: name,
+          role: role,
+          signupDate: getTodayDateString()
+        });
+        localStorage.setItem(`${STORAGE_PREFIX}users`, JSON.stringify(registeredUsers));
+      }
+
+      showNotification(`${name} 님, 반가워요! 독서 마라톤에 로그인되었습니다.`);
+      renderApp();
+    }
+
+    function handleLogout() {
+      currentUser = null;
+      localStorage.removeItem(`${STORAGE_PREFIX}session`);
+      showNotification('안전하게 로그아웃 되었습니다.');
+      renderApp();
+    }
+
+    function handleAdminLogout() {
+      isAdminUnlocked = false;
+      localStorage.removeItem(`${STORAGE_PREFIX}admin_unlocked`);
+      showNotification('관리자 권한을 반납하고 잠금 처리되었습니다.');
+      renderApp();
+    }
+
+    function handleAdminAuthSubmit(e) {
+      e.preventDefault();
+      const inputPass = document.getElementById('adminPass').value;
+      if (inputPass === adminPassword) {
+        isAdminUnlocked = true;
+        localStorage.setItem(`${STORAGE_PREFIX}admin_unlocked`, 'true');
+        showNotification('관리자 인증에 성공하였습니다!');
+        renderApp();
+      } else {
+        showNotification('비밀번호가 올바르지 않습니다.', 'error');
+      }
+    }
+
+    // ----------------------------------------------------------------------
+    // ROUTING
+    // ----------------------------------------------------------------------
+    function navigate(tab) {
+      activeTab = tab;
+      
+      if (tab === 'write' && currentUser) {
+        const draftKey = `${STORAGE_PREFIX}draft_${currentUser.id}`;
+        const savedDraft = localStorage.getItem(draftKey);
+        if (savedDraft && !editingLog) {
+          logForm = JSON.parse(savedDraft);
+          showNotification('임시 저장된 독서 기록을 복구했습니다.');
+        } else if (!editingLog) {
+          logForm = { title: '', author: '', range: '', content: '' };
+        }
+      }
+      
+      renderApp();
+    }
+
+    function renderApp() {
+      renderTestController();
+      renderHeader();
+      renderMainContent();
+      renderMobileNav();
+      lucide.createIcons();
+    }
+
+    function renderTestController() {
+      const controllerBar = document.getElementById('test-controller-bar');
+      if (controllerBar) {
+        if (isAdminUnlocked) {
+          controllerBar.classList.remove('hidden');
+        } else {
+          controllerBar.classList.add('hidden');
+        }
+      }
+    }
+
+    function renderHeader() {
+      const nav = document.getElementById('desktop-nav');
+      if (currentUser) {
+        const myLogsCount = logs.filter(l => l.userId === currentUser.id).length;
+        nav.innerHTML = `
+          <button onclick="navigate('main')" class="px-4 py-2.5 rounded-xl text-sm font-semibold transition-all ${activeTab === 'main' ? 'bg-blue-50 text-blue-600' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'}">대회 홈</button>
+          <button onclick="navigate('write')" class="px-4 py-2.5 rounded-xl text-sm font-semibold transition-all flex items-center gap-1.5 ${activeTab === 'write' ? 'bg-blue-50 text-blue-600' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'}">
+            <i data-lucide="plus" class="w-4 h-4"></i>독서일지 작성
+          </button>
+          <button onclick="navigate('mypage')" class="px-4 py-2.5 rounded-xl text-sm font-semibold transition-all ${activeTab === 'mypage' ? 'bg-blue-50 text-blue-600' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'}">마이페이지 (${myLogsCount}회)</button>
+          <button onclick="navigate('survey')" class="px-4 py-2.5 rounded-xl text-sm font-semibold transition-all flex items-center gap-1.5 ${activeTab === 'survey' ? 'bg-purple-50 text-purple-700 font-bold border border-purple-200' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'}">
+            <i data-lucide="smile" class="w-4 h-4 text-purple-600"></i>만족도 조사
+          </button>
+          <button onclick="navigate('admin')" class="px-4 py-2.5 rounded-xl text-sm font-semibold transition-all flex items-center gap-1.5 ${activeTab === 'admin' ? 'bg-slate-100 text-slate-800 border border-slate-200' : 'text-slate-500 hover:bg-slate-100 hover:text-slate-900'}">
+            <i data-lucide="settings" class="w-4 h-4"></i>관리자 ${isAdminUnlocked ? '<span class="w-2 h-2 rounded-full bg-emerald-500 ml-1"></span>' : ''}
+          </button>
+        `;
+      } else {
+        nav.innerHTML = '';
+      }
+
+      const userPanel = document.getElementById('header-user-panel');
+      let adminLogoutBtn = '';
+      if (isAdminUnlocked) {
+        adminLogoutBtn = `
+          <button onclick="handleAdminLogout()" class="px-3 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-700 text-xs font-bold rounded-xl border border-rose-200 transition flex items-center gap-1">
+            <i data-lucide="lock" class="w-3.5 h-3.5"></i>관리자 잠금
+          </button>
+        `;
+      }
+
+      if (currentUser) {
+        userPanel.innerHTML = `
+          ${adminLogoutBtn}
+          <div class="hidden sm:block text-right">
+            <p class="text-xs font-medium text-slate-400">${currentUser.role === 'student' ? '학생' : '교직원'}</p>
+            <p class="text-sm font-bold text-slate-800">${currentUser.name} 님</p>
+          </div>
+          <button onclick="handleLogout()" class="p-2 text-slate-500 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition-colors" title="로그아웃">
+            <i data-lucide="log-out" class="w-5.5 h-5.5"></i>
+          </button>
+        `;
+      } else {
+        userPanel.innerHTML = `
+          ${adminLogoutBtn}
+          <button onclick="navigate('admin')" class="px-3 py-1.5 sm:px-4 sm:py-2 text-xs sm:text-sm font-medium text-slate-600 hover:bg-slate-100 rounded-xl transition">
+            관리자 로그인
+          </button>
+        `;
+      }
+    }
+
+    function renderMobileNav() {
+      const mobNav = document.getElementById('mobile-nav');
+      if (currentUser) {
+        mobNav.classList.remove('hidden');
+        mobNav.className = "md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 z-40 shadow-[0_-4px_12px_rgba(0,0,0,0.05)] h-16 grid grid-cols-5";
+        mobNav.innerHTML = `
+          <button onclick="navigate('main')" class="flex flex-col items-center justify-center text-[10px] font-semibold ${activeTab === 'main' ? 'text-blue-600' : 'text-slate-500'}">
+            <i data-lucide="book-open" class="w-4.5 h-4.5 mb-0.5"></i>대회 홈
+          </button>
+          <button onclick="navigate('write')" class="flex flex-col items-center justify-center text-[10px] font-semibold ${activeTab === 'write' ? 'text-blue-600' : 'text-slate-500'}">
+            <i data-lucide="plus" class="w-4.5 h-4.5 mb-0.5"></i>일지 작성
+          </button>
+          <button onclick="navigate('mypage')" class="flex flex-col items-center justify-center text-[10px] font-semibold ${activeTab === 'mypage' ? 'text-blue-600' : 'text-slate-500'}">
+            <i data-lucide="user" class="w-4.5 h-4.5 mb-0.5"></i>마이페이지
+          </button>
+          <button onclick="navigate('survey')" class="flex flex-col items-center justify-center text-[10px] font-semibold ${activeTab === 'survey' ? 'text-purple-600' : 'text-slate-500'}">
+            <i data-lucide="smile" class="w-4.5 h-4.5 mb-0.5"></i>만족도 조사
+          </button>
+          <button onclick="navigate('admin')" class="flex flex-col items-center justify-center text-[10px] font-semibold ${activeTab === 'admin' ? 'text-blue-600' : 'text-slate-500'}">
+            <i data-lucide="settings" class="w-4.5 h-4.5 mb-0.5"></i>관리자
+          </button>
+        `;
+      } else {
+        mobNav.classList.add('hidden');
+      }
+    }
+
+    function renderMainContent() {
+      const container = document.getElementById('app-content');
+
+      if (!currentUser && activeTab !== 'admin') {
+        container.innerHTML = getLoginTemplate();
+        document.getElementById('login-form').addEventListener('submit', handleLoginSubmit);
+        return;
+      }
+
+      if (activeTab === 'main') {
+        container.innerHTML = getMainTemplate();
+        return;
+      }
+
+      if (activeTab === 'write') {
+        container.innerHTML = getWriteTemplate();
+        const textarea = document.getElementById('content-textarea');
+        if (textarea) {
+          textarea.addEventListener('input', (e) => {
+            const count = e.target.value.trim().length;
+            const counterLabel = document.getElementById('char-counter-badge');
+            const validationWarning = document.getElementById('validation-warning');
+            counterLabel.innerText = `글자 수: ${count} / 최소 50자`;
+            
+            if (count >= 50) {
+              counterLabel.className = "text-xs font-bold px-2 py-1 rounded-full bg-emerald-50 text-emerald-700";
+              if (validationWarning) validationWarning.classList.add('hidden');
+            } else {
+              counterLabel.className = "text-xs font-bold px-2 py-1 rounded-full bg-rose-50 text-rose-600";
+              if (validationWarning) {
+                validationWarning.classList.remove('hidden');
+                document.getElementById('missing-char-count').innerText = 50 - count;
+              }
+            }
+
+            logForm.title = document.getElementById('book-title-input').value;
+            logForm.author = document.getElementById('book-author-input').value;
+            logForm.range = document.getElementById('book-range-input').value;
+            logForm.content = e.target.value;
+            if (!editingLog) {
+              localStorage.setItem(`${STORAGE_PREFIX}draft_${currentUser.id}`, JSON.stringify(logForm));
+            }
+          });
+
+          textarea.addEventListener('keydown', (e) => {
+            if ((e.ctrlKey || e.metaKey) && (e.key === 'v' || e.key === 'V')) {
+              e.preventDefault();
+              showNotification('공정한 대회를 위해 붙여넣기가 금지되어 있습니다. 직접 사색을 타이핑해 주세요!', 'error');
+            }
+          });
+        }
+        document.getElementById('log-entry-form').addEventListener('submit', handleSaveLogSubmit);
+        return;
+      }
+
+      if (activeTab === 'mypage') {
+        container.innerHTML = getMypageTemplate();
+        return;
+      }
+
+      if (activeTab === 'survey') {
+        container.innerHTML = getSurveyTemplate();
+        return;
+      }
+
+      if (activeTab === 'admin') {
+        if (!isAdminUnlocked) {
+          container.innerHTML = getAdminLockTemplate();
+          document.getElementById('admin-auth-form').addEventListener('submit', handleAdminAuthSubmit);
+        } else {
+          container.innerHTML = getAdminDashboardTemplate();
+        }
+        return;
+      }
+    }
+
+    // ----------------------------------------------------------------------
+    // DATA SELECTORS & STATISTICS CALCULATION
+    // ----------------------------------------------------------------------
+    function getUserStats() {
+      const statsMap = {};
+      
+      registeredUsers.forEach(user => {
+        statsMap[user.id] = {
+          id: user.id,
+          name: user.name,
+          role: user.role,
+          count: 0,
+          books: new Set(),
+          signupDate: user.signupDate || '2026-07-27'
+        };
+      });
+
+      logs.forEach(log => {
+        if (!statsMap[log.userId]) {
+          statsMap[log.userId] = {
+            id: log.userId,
+            name: log.userName,
+            role: log.userRole,
+            count: 0,
+            books: new Set(),
+            signupDate: log.date
+          };
+          registeredUsers.push({
+            id: log.userId,
+            name: log.userName,
+            role: log.userRole,
+            signupDate: log.date
+          });
+          localStorage.setItem(`${STORAGE_PREFIX}users`, JSON.stringify(registeredUsers));
+        }
+        statsMap[log.userId].count += 1;
+        statsMap[log.userId].books.add(log.title);
+      });
+
+      return Object.values(statsMap);
+    }
+
+    function getTop10Users() {
+      return [...getUserStats()]
+        .sort((a, b) => b.count - a.count || a.name.localeCompare(b.name))
+        .slice(0, 10);
+    }
+
+    // ----------------------------------------------------------------------
+    // TEMPLATE GENERATORS (HTML Builder)
+    // ----------------------------------------------------------------------
+    function getLoginTemplate() {
+      return `
+        <div class="max-w-md mx-auto my-6 sm:my-16 animate-fade-in">
+          <div class="bg-white rounded-3xl shadow-xl border border-slate-100 overflow-hidden">
+            <div class="p-8 bg-gradient-to-br from-blue-600 to-indigo-700 text-white text-center relative">
+              <div class="absolute top-4 right-4 bg-white/10 px-3 py-1 rounded-full text-[11px] font-bold tracking-wider uppercase">Paperless System</div>
+              <i data-lucide="book-open" class="w-12 h-12 mx-auto mb-4 text-blue-100"></i>
+              <h2 class="text-2xl font-black tracking-tight">2026 독서 마라톤</h2>
+              <p class="text-blue-100 text-sm mt-2 font-medium">송호고등학교 서로채움도서관</p>
+            </div>
+
+            <form id="login-form" class="p-8 space-y-6">
+              <div>
+                <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">구분 선택</label>
+                <div class="grid grid-cols-2 gap-3">
+                  <button type="button" onclick="setLoginRole('student')" id="btn-role-student" class="py-3.5 px-4 rounded-xl font-bold text-sm border-2 text-center transition-all border-blue-600 bg-blue-50 text-blue-700 shadow-sm">
+                    학생
+                  </button>
+                  <button type="button" onclick="setLoginRole('staff')" id="btn-role-staff" class="py-3.5 px-4 rounded-xl font-bold text-sm border-2 text-center transition-all border-slate-200 text-slate-600 hover:bg-slate-50">
+                    교직원
+                  </button>
+                </div>
+                <input type="hidden" id="login-role" value="student">
+              </div>
+
+              <div>
+                <label for="login-name" class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">이름</label>
+                <input id="login-name" type="text" required placeholder="이름을 입력하세요" class="w-full px-4 py-3.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-base font-medium">
+              </div>
+
+              <div>
+                <label id="login-no-label" for="login-number" class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">학번 (예: 20101)</label>
+                <input id="login-number" type="text" required placeholder="학번 5자리를 입력하세요" class="w-full px-4 py-3.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-base font-medium">
+              </div>
+
+              <button type="submit" class="w-full py-4 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold text-base transition duration-150 shadow-lg shadow-blue-500/10 flex items-center justify-center gap-2">
+                참여하기 (로그인) <i data-lucide="chevron-right" class="w-5 h-5"></i>
+              </button>
+
+              <div class="pt-2 text-center">
+                <p class="text-xs text-slate-400">* 첫 로그인 시 학번/교직원번호로 가상 DB 파일에 계정이 자동 생성됩니다.</p>
+              </div>
+            </form>
+          </div>
+        </div>
+      `;
+    }
+
+    function setLoginRole(role) {
+      document.getElementById('login-role').value = role;
+      const studentBtn = document.getElementById('btn-role-student');
+      const staffBtn = document.getElementById('btn-role-staff');
+      const label = document.getElementById('login-no-label');
+      const input = document.getElementById('login-number');
+
+      if (role === 'student') {
+        studentBtn.className = "py-3.5 px-4 rounded-xl font-bold text-sm border-2 text-center transition-all border-blue-600 bg-blue-50 text-blue-700 shadow-sm";
+        staffBtn.className = "py-3.5 px-4 rounded-xl font-bold text-sm border-2 text-center transition-all border-slate-200 text-slate-600 hover:bg-slate-50";
+        label.innerText = "학번 (예: 20101)";
+        input.placeholder = "학번 5자리를 입력하세요";
+      } else {
+        studentBtn.className = "py-3.5 px-4 rounded-xl font-bold text-sm border-2 text-center transition-all border-slate-200 text-slate-600 hover:bg-slate-50";
+        staffBtn.className = "py-3.5 px-4 rounded-xl font-bold text-sm border-2 text-center transition-all border-blue-600 bg-blue-50 text-blue-700 shadow-sm";
+        label.innerText = "교직원번호";
+        input.placeholder = "교직원 번호를 입력하세요";
+      }
+    }
+
+    function setSurveyRating(type, val) {
+      if (type === 'prog') {
+        surveyRatingProg = val;
+        for (let i = 1; i <= 5; i++) {
+          const star = document.getElementById(`star-prog-${i}`);
+          if (star) {
+            if (i <= val) {
+              star.classList.add('text-amber-400');
+              star.classList.remove('text-slate-300');
+            } else {
+              star.classList.remove('text-amber-400');
+              star.classList.add('text-slate-300');
+            }
+          }
+        }
+      } else {
+        surveyRatingWeb = val;
+        for (let i = 1; i <= 5; i++) {
+          const star = document.getElementById(`star-web-${i}`);
+          if (star) {
+            if (i <= val) {
+              star.classList.add('text-amber-400');
+              star.classList.remove('text-slate-300');
+            } else {
+              star.classList.remove('text-amber-400');
+              star.classList.add('text-slate-300');
+            }
+          }
+        }
+      }
+    }
+
+    function isSurveyPeriod() {
+      const now = getSystemDate();
+      const sStart = new Date('2026-08-01T00:00:00');
+      const sEnd = new Date('2026-08-02T23:59:59');
+      return now >= sStart && now <= sEnd;
+    }
+
+    function handleSurveySubmit(e) {
+      e.preventDefault();
+      if (!currentUser) return;
+
+      if (surveyRatingProg === 0 || surveyRatingWeb === 0) {
+        showNotification('만족도 평가 별점을 선택해주세요.', 'error');
+        return;
+      }
+
+      const feedback = document.getElementById('survey-feedback').value.trim();
+      const myUniqueDays = new Set(logs.filter(l => l.userId === currentUser.id).map(l => l.date)).size;
+
+      localStorage.setItem(`${STORAGE_PREFIX}survey_submitted_${currentUser.id}`, 'true');
+      localStorage.setItem(`${STORAGE_PREFIX}survey_data_${currentUser.id}`, JSON.stringify({
+        progRating: surveyRatingProg,
+        webRating: surveyRatingWeb,
+        feedback: feedback,
+        tickets: myUniqueDays,
+        date: getTodayDateString(),
+        userName: currentUser.name,
+        userRole: currentUser.role
+      }));
+
+      showNotification('만족도 조사가 정상 제출되었으며, 자동 추첨에 응모되었습니다!', 'success');
+      renderApp();
+    }
+
+    function getSurveyTemplate() {
+      const myLogs = logs.filter(l => l.userId === currentUser.id);
+      const myUniqueDays = new Set(myLogs.map(l => l.date)).size;
+      const isSubmitted = localStorage.getItem(`${STORAGE_PREFIX}survey_submitted_${currentUser.id}`) === 'true';
+
+      let prizesHtml = '';
+      prizeItems.forEach(item => {
+        prizesHtml += `<div>🎁 ${item.name} (${item.count}개)</div>`;
+      });
+      if (prizeItems.length === 0) {
+        prizesHtml = '<div>설정된 상품이 없습니다.</div>';
+      }
+
+      if (isSubmitted) {
+        return `
+          <div class="max-w-2xl mx-auto my-12 animate-fade-in">
+            <div class="bg-white rounded-3xl border-2 border-emerald-500 p-8 shadow-xl text-center space-y-6 relative overflow-hidden">
+              <div class="p-4 bg-emerald-50 rounded-full w-fit mx-auto text-emerald-600">
+                <i data-lucide="check-circle" class="w-12 h-12"></i>
+              </div>
+              
+              <div class="space-y-2">
+                <span class="bg-emerald-100 text-emerald-800 text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider">추첨 응모 완료 확인증</span>
+                <h2 class="text-2xl font-black text-slate-900 tracking-tight">만족도 조사가 성공적으로 제출되었습니다!</h2>
+                <p class="text-sm text-slate-500">
+                  송호고 서로채움도서관의 발전을 위한 소중한 한 표 감사합니다.
+                </p>
+              </div>
+
+              <div class="bg-slate-50 rounded-2xl p-6 border border-slate-100 text-left space-y-4">
+                <div class="border-b pb-3 flex justify-between items-center">
+                  <span class="text-xs font-bold text-slate-400">마라토너 정보</span>
+                  <span class="text-xs font-bold text-slate-800">${currentUser.name} 님 (${currentUser.role === 'student' ? '학생' : '교직원'})</span>
+                </div>
+                <div class="border-b pb-3 flex justify-between items-center">
+                  <span class="text-xs font-bold text-slate-400">나의 누적 참여 일수</span>
+                  <span class="text-sm font-black text-blue-600">${myUniqueDays}일 기록</span>
+                </div>
+                <div class="border-b pb-3 flex justify-between items-center">
+                  <span class="text-xs font-bold text-slate-400">획득한 경품 응모권</span>
+                  <span class="text-sm font-black text-purple-700 bg-purple-50 px-2.5 py-1 rounded-lg border border-purple-100">${myUniqueDays}장 (당첨률 ${myUniqueDays}배!)</span>
+                </div>
+              </div>
+
+              <div class="bg-emerald-50 border border-emerald-100 rounded-2xl p-4 text-left text-xs text-emerald-800 leading-relaxed">
+                🎉 귀하의 명의로 총 <strong>${myUniqueDays}개의 경품 추첨 기회</strong>가 자동 등록되었습니다!
+              </div>
+            </div>
+          </div>
+        `;
+      }
+
+      return `
+        <div class="max-w-2xl mx-auto animate-fade-in">
+          <div class="bg-white rounded-3xl border border-slate-200/80 shadow-md overflow-hidden">
+            <div class="p-6 sm:p-8 bg-gradient-to-br from-purple-600 to-indigo-700 text-white text-center relative">
+              <i data-lucide="smile" class="w-12 h-12 mx-auto mb-4 text-purple-100"></i>
+              <h2 class="text-2xl font-black tracking-tight">독서 마라톤 만족도 조사</h2>
+              <p class="text-purple-100 text-sm mt-2 font-medium">더 성장하는 서로채움도서관을 위해 의견을 들려주세요.</p>
+            </div>
+
+            <form onsubmit="handleSurveySubmit(event)" class="p-6 sm:p-8 space-y-6">
+              <div class="bg-purple-50 border border-purple-100 rounded-2xl p-5 flex items-center justify-between">
+                <div>
+                  <h4 class="text-xs font-extrabold text-purple-800 mb-1">🎟️ 나의 경품 추첨 응모권</h4>
+                  <p class="text-[11px] text-slate-600">누적 완주 일수당 1회의 자동 응모 기회가 축적됩니다.</p>
+                </div>
+                <div class="text-right">
+                  <p class="text-xs font-bold text-slate-700">마라톤 참여 일수: <strong class="text-slate-900">${myUniqueDays}일</strong></p>
+                  <p class="text-sm font-black text-purple-700">보유 응모권: <strong class="text-base">${myUniqueDays}장</strong></p>
+                </div>
+              </div>
+
+              <div class="space-y-3">
+                <label class="block text-sm font-bold text-slate-700">Q1. 이번 2026 독서 마라톤 프로그램에 전반적으로 만족하시나요? <span class="text-rose-500">*</span></label>
+                <div class="flex items-center gap-2">
+                  ${[1, 2, 3, 4, 5].map(v => `
+                    <button type="button" onclick="setSurveyRating('prog', ${v})" id="star-prog-${v}" class="text-3xl text-slate-300 transition-transform transform hover:scale-110">★</button>
+                  `).join('')}
+                </div>
+              </div>
+
+              <div class="space-y-3">
+                <label class="block text-sm font-bold text-slate-700">Q2. 독서 마라톤 웹사이트(Paperless System)의 사용성과 출석 체크는 편리했나요? <span class="text-rose-500">*</span></label>
+                <div class="flex items-center gap-2">
+                  ${[1, 2, 3, 4, 5].map(v => `
+                    <button type="button" onclick="setSurveyRating('web', ${v})" id="star-web-${v}" class="text-3xl text-slate-300 transition-transform transform hover:scale-110">★</button>
+                  `).join('')}
+                </div>
+              </div>
+
+              <div class="space-y-2">
+                <label for="survey-feedback" class="block text-sm font-bold text-slate-700">Q3. 독서 마라톤 프로그램이나 학교 도서관 운영에 건의하고 싶은 아이디어를 자유롭게 적어주세요.</label>
+                <textarea id="survey-feedback" rows="4" placeholder="예: 소감 작성을 위한 인터페이스가 정말 편리했습니다!" class="w-full p-4 text-sm rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 leading-relaxed"></textarea>
+              </div>
+
+              <div class="bg-slate-50 border border-slate-100 rounded-2xl p-4 space-y-2">
+                <p class="text-xs font-bold text-slate-500">🎁 경품 당첨 추첨 선물 목록</p>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-[11px] text-slate-600 font-medium">
+                  ${prizesHtml}
+                </div>
+              </div>
+
+              <button type="submit" class="w-full py-4 bg-purple-600 hover:bg-purple-700 text-white rounded-xl font-bold text-base transition shadow-lg shadow-purple-500/10 flex items-center justify-center gap-2">
+                <i data-lucide="check" class="w-5 h-5"></i>만족도 조사 제출 및 선물 응모 완료
+              </button>
+            </form>
+          </div>
+        </div>
+      `;
+    }
+
+    function getMainTemplate() {
+      const myLogs = logs.filter(l => l.userId === currentUser.id);
+      const myCount = myLogs.length;
+      const isTodayDone = myLogs.some(l => l.date === getTodayDateString());
+      const remainingDays = getRemainingDays();
+      const topUsers = getTop10Users();
+
+      // 마라톤 7일간의 출석 달력 트랙 생성 (7월 27일 ~ 8월 2일)
+      const marathonDates = [
+        { date: '2026-07-27', dayName: '7/27 (월)' },
+        { date: '2026-07-28', dayName: '7/28 (화)' },
+        { date: '2026-07-29', dayName: '7/29 (수)' },
+        { date: '2026-07-30', dayName: '7/30 (목)' },
+        { date: '2026-07-31', dayName: '7/31 (금)' },
+        { date: '2026-08-01', dayName: '8/01 (토)' },
+        { date: '2026-08-02', dayName: '8/02 (일)' }
+      ];
+
+      let calendarDaysHtml = '';
+      marathonDates.forEach(item => {
+        const hasLog = myLogs.some(l => l.date === item.date);
+        calendarDaysHtml += `
+          <div class="h-20 sm:h-24 relative rounded-2xl border flex flex-col justify-between p-2.5 transition-all ${
+            hasLog 
+              ? 'bg-blue-600 text-white border-blue-600 shadow-md' 
+              : 'bg-emerald-50/70 border-emerald-100 text-slate-700 hover:bg-emerald-50'
+          }">
+            <span class="text-xs font-extrabold ${hasLog ? 'text-blue-100' : 'text-slate-600'}">${item.dayName}</span>
+            <div class="flex items-center justify-center my-auto">
+              ${hasLog 
+                ? '<span class="text-2xl animate-bounce">📚✔</span>' 
+                : '<span class="text-xs text-slate-400 font-semibold">미작성</span>'}
+            </div>
+            <span class="text-[9px] font-bold self-end uppercase tracking-wider opacity-75">${hasLog ? '완료' : '진행중'}</span>
+          </div>
+        `;
+      });
+
+      const badges = [
+        { min: 1, label: '🌱 새싹 러너', desc: '1일 이상 참여', color: 'border-emerald-300 text-emerald-800 bg-emerald-50' },
+        { min: 3, label: '🏃 페이스 메이커', desc: '3일 이상 참여', color: 'border-sky-300 text-sky-800 bg-sky-50' },
+        { min: 5, label: '⚡ 지혜의 레이서', desc: '5일 이상 참여', color: 'border-amber-400 text-amber-800 bg-amber-50 shadow-sm' },
+        { min: 7, label: '👑 완주 Master', desc: '7일 완주 성공!', color: 'border-purple-300 text-purple-800 bg-purple-50 ring-2 ring-purple-100' }
+      ];
+
+      let badgesHtml = '';
+      badges.forEach(badge => {
+        const unlocked = myCount >= badge.min;
+        badgesHtml += `
+          <div class="flex items-center justify-between p-3.5 rounded-2xl border transition duration-300 ${unlocked ? badge.color : 'bg-slate-50 border-slate-200 text-slate-400 opacity-60'}">
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 rounded-full flex items-center justify-center text-xl font-bold ${unlocked ? 'bg-white shadow-sm' : 'bg-slate-100 text-slate-300'}">
+                ${badge.label.substring(0, 2)}
+              </div>
+              <div>
+                <p class="text-sm font-extrabold ${unlocked ? 'text-slate-900' : 'text-slate-400'}">${badge.label.substring(2)}</p>
+                <p class="text-[11px] text-slate-400">${badge.desc}</p>
+              </div>
+            </div>
+            ${unlocked ? '<div class="w-6 h-6 rounded-full bg-emerald-500 text-white flex items-center justify-center"><i data-lucide="check" class="w-3.5 h-3.5 stroke-[3]"></i></div>' : '<span class="text-[10px] font-bold text-slate-400 bg-slate-200/60 px-2 py-0.5 rounded-md">잠금</span>'}
+          </div>
+        `;
+      });
+
+      let topUsersHtml = '';
+      if (topUsers.length > 0) {
+        topUsers.forEach((user, idx) => {
+          const rankColor = idx === 0 ? 'bg-yellow-100 text-yellow-800' : idx === 1 ? 'bg-slate-200 text-slate-800' : idx === 2 ? 'bg-amber-100 text-amber-800' : 'bg-slate-200/50 text-slate-500';
+          topUsersHtml += `
+            <div class="flex items-center justify-between p-3.5 bg-slate-50 hover:bg-slate-100/80 transition rounded-2xl border border-slate-100">
+              <div class="flex items-center gap-3">
+                <span class="w-6 h-6 flex items-center justify-center rounded-full text-xs font-black ${rankColor}">${idx + 1}</span>
+                <div>
+                  <p class="text-sm font-bold text-slate-800 flex items-center gap-1.5">
+                    ${user.name}
+                    <span class="text-[10px] px-1.5 py-0.2 rounded font-medium ${user.role === 'student' ? 'bg-blue-50 text-blue-600' : 'bg-purple-50 text-purple-600'}">${user.role === 'student' ? '학생' : '교직원'}</span>
+                  </p>
+                  <p class="text-[10px] text-slate-400 font-mono">ID: ${user.id}</p>
+                </div>
+              </div>
+              <div class="text-right">
+                <span class="text-sm font-black text-blue-600">${user.count}회</span>
+                <p class="text-[9px] text-slate-400">참여 완료</p>
+              </div>
+            </div>
+          `;
+        });
+      } else {
+        topUsersHtml = '<p class="col-span-2 text-center text-sm py-8 text-slate-400">아직 등록된 기록이 없습니다.</p>';
+      }
+
+      return `
+        <div class="space-y-8 animate-fade-in">
+          <!-- Top Progress Card -->
+          <div class="bg-white rounded-3xl shadow-sm border border-slate-200/80 p-6 sm:p-8">
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-6">
+              <div class="space-y-2">
+                <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-100">
+                  <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>실시간 개인 진척도
+                </span>
+                <h2 class="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">${currentUser.name} 님의 마라톤 완주 레이스</h2>
+                <p class="text-sm text-slate-500">목표 기간(7/27~8/2) 중 <strong class="text-blue-600">${myCount}일</strong> 동안 일지를 기록했습니다.</p>
+              </div>
+
+              <div class="text-left md:text-right bg-slate-50 rounded-2xl p-4 md:px-6 md:py-4 border border-slate-100 min-w-[200px]">
+                <p class="text-xs font-semibold text-slate-400 tracking-wider">오늘 나의 활동 여부</p>
+                ${isTodayDone 
+                  ? '<div class="flex items-center gap-2 text-emerald-600 font-extrabold text-base sm:text-lg mt-1"><i data-lucide="check-circle" class="w-5.5 h-5.5 text-emerald-500"></i>작성 완료! 내일 또 만나요</div>' 
+                  : '<div class="flex items-center gap-2 text-amber-500 font-extrabold text-base sm:text-lg mt-1"><i data-lucide="alert-circle" class="w-5.5 h-5.5 text-amber-500"></i>오늘 일지 미작성</div>'}
+              </div>
+            </div>
+
+            <div class="mt-8 space-y-2.5">
+              <div class="flex justify-between items-end text-sm">
+                <span class="font-bold text-slate-500">대회 완주 달성률 (${Math.min(100, Math.round((myCount / 7) * 100)) || 0}%)</span>
+                <span class="font-mono text-slate-800 font-extrabold text-base">${myCount} <span class="text-slate-400 text-xs font-medium">/ 7 일</span></span>
+              </div>
+              <div class="w-full bg-slate-100 rounded-full h-4 sm:h-5 overflow-hidden p-0.5 border border-slate-200/50">
+                <div class="bg-blue-600 h-full rounded-full transition-all duration-500 shadow-inner relative" style="width: ${Math.min(100, (myCount / 7) * 100)}%"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Badges and Attendance Calendar -->
+          <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <div class="bg-white rounded-3xl border border-slate-200/80 p-6 shadow-sm flex flex-col justify-between">
+              <div>
+                <h3 class="text-base font-extrabold text-slate-900 flex items-center gap-2 mb-2">
+                  <i data-lucide="trophy" class="w-5 h-5 text-amber-500"></i>베스트 독서왕 배지 달성도
+                </h3>
+                <p class="text-xs text-slate-500 mb-5">독서일지 기록 일수가 누적될수록 배지가 활성화됩니다.</p>
+              </div>
+              <div class="space-y-4">${badgesHtml}</div>
+            </div>
+
+            <div class="lg:col-span-2 bg-white rounded-3xl border border-slate-200/80 p-6 shadow-sm">
+              <div class="flex items-center justify-between mb-2">
+                <h3 class="text-base font-extrabold text-slate-900 flex items-center gap-2">
+                  <i data-lucide="calendar" class="w-5 h-5 text-blue-600"></i>7일간의 독서 마라톤 출석 트랙
+                </h3>
+                <span class="text-xs bg-blue-50 text-blue-600 font-bold px-2.5 py-1 rounded-full">2026.07.27 ~ 08.02</span>
+              </div>
+              <p class="text-xs text-slate-500 mb-5">일지를 남긴 날짜에는 책 도장 아이콘이 새겨집니다.</p>
+
+              <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-3">${calendarDaysHtml}</div>
+            </div>
+          </div>
+
+          <!-- General Info and Top Rankings -->
+          <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <div class="lg:col-span-2 space-y-6">
+              <div class="bg-white rounded-3xl shadow-sm border border-slate-200/80 overflow-hidden">
+                <div class="p-6 sm:p-8 bg-gradient-to-br from-slate-900 to-slate-800 text-white relative">
+                  <div class="space-y-4">
+                    <span class="bg-blue-600 px-3 py-1 rounded-full text-xs font-bold inline-block">대회 안내</span>
+                    <h3 class="text-2xl font-black tracking-tight">배움과 사유의 여정, 독서 마라톤에 함께하세요!</h3>
+                    <p class="text-slate-300 text-sm leading-relaxed">
+                      기존 독서 포털에서는 학생 중심의 등록만 가능하여, 교육 공동체인 교직원들이 함께 참여하기 어려웠습니다. 이번 마라톤은 우리 학교 전 구성원(학생, 교사, 교직원)이 함께 책을 읽고 생각을 나눌 수 있도록 전용 페이퍼리스 웹사이트로 운영됩니다.
+                    </p>
+                  </div>
+                </div>
+
+                <div class="p-6 sm:p-8 space-y-6">
+                  <h4 class="font-bold text-slate-800 text-lg border-b pb-3 flex items-center gap-2">
+                    <i data-lucide="info" class="w-5 h-5 text-blue-600"></i>대회 참여 규칙 및 방법
+                  </h4>
+                  <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="space-y-3 bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                      <h5 class="font-bold text-slate-700 text-sm">참여 방법</h5>
+                      <ul class="space-y-2 text-xs sm:text-sm text-slate-600 list-disc list-outside pl-5">
+                        <li>매일 마라톤 사이트에 로그인합니다.</li>
+                        <li>독서 후 [독서일지 작성] 메뉴에서 기록합니다.</li>
+                        <li>느낀 점은 <strong class="text-blue-600">최소 50자 이상</strong> 적어야 제출 가능합니다.</li>
+                      </ul>
+                    </div>
+                    <div class="space-y-3 bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                      <h5 class="font-bold text-slate-700 text-sm">기본 규칙</h5>
+                      <ul class="space-y-2 text-xs sm:text-sm text-slate-600 list-disc list-outside pl-5">
+                        <li>일지는 하루에 한 번만 작성 가능합니다.</li>
+                        <li>같은 책을 며칠 동안 나눠 읽고 작성해도 됩니다.</li>
+                        <li>대회 마감 후에는 조회만 가능합니다.</li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Top Rankings -->
+              <div class="bg-white rounded-3xl shadow-sm border border-slate-200/80 p-6 sm:p-8">
+                <h3 class="text-lg font-extrabold text-slate-900 tracking-tight flex items-center gap-2 mb-4">
+                  <i data-lucide="award" class="w-5.5 h-5.5 text-yellow-500"></i>실시간 마라톤 랭킹 TOP 10
+                </h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">${topUsersHtml}</div>
+              </div>
+            </div>
+
+            <!-- Right Column: Quick D-Day -->
+            <div class="space-y-6">
+              <div class="bg-white rounded-3xl shadow-sm border border-slate-200/80 p-6 space-y-6">
+                <h4 class="font-extrabold text-slate-800 text-sm uppercase tracking-wider flex items-center gap-2">
+                  <i data-lucide="clock" class="w-4 h-4 text-slate-500"></i>대회 운영 현황
+                </h4>
+                <div class="space-y-4">
+                  <div class="bg-blue-50 rounded-2xl p-5 text-center border border-blue-100/50">
+                    <p class="text-xs text-blue-600 font-semibold mb-1">대회 완주까지</p>
+                    <h3 class="text-3xl font-black text-blue-900 tracking-tight">${remainingDays > 0 ? `D-${remainingDays}일` : '대회 종료'}</h3>
+                    <p class="text-[11px] text-blue-500 font-medium mt-1">2026.07.27 ~ 2026.08.02</p>
+                  </div>
+
+                  <div class="divide-y divide-slate-100">
+                    <div class="py-3 flex justify-between text-sm">
+                      <span class="text-slate-500 font-medium">시작일</span>
+                      <span class="font-bold text-slate-800">2026년 7월 27일 (월)</span>
+                    </div>
+                    <div class="py-3 flex justify-between text-sm">
+                      <span class="text-slate-500 font-medium">종료일</span>
+                      <span class="font-bold text-slate-800">2026년 8월 2일 (일)</span>
+                    </div>
+                    <div class="py-3 flex justify-between text-sm">
+                      <span class="text-slate-500 font-medium">작성 권한</span>
+                      <span class="font-bold ${isMarathonPeriod() ? 'text-emerald-600' : 'text-rose-500'}">
+                        ${isMarathonPeriod() ? '7/27~8/2 작성 가능' : '기간 외 수정/등록 제한'}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Quick action banner -->
+              <div class="bg-gradient-to-br from-blue-600 to-indigo-700 rounded-3xl p-6 text-white space-y-6 shadow-lg">
+                <h4 class="font-extrabold text-lg">오늘 읽은 독서 일지를 남기셨나요?</h4>
+                <p class="text-xs text-blue-100/80 leading-relaxed">
+                  하루에 단 한 번 주어지는 기회! 책을 읽고 깨달은 사색의 일지를 기록하여 지식 레이스 트랙을 완주해 보세요.
+                </p>
+                <div class="space-y-2.5">
+                  ${isMarathonPeriod() 
+                    ? `<button onclick="navigate('write')" ${isTodayDone ? 'disabled' : ''} class="w-full py-3.5 rounded-xl font-bold text-sm text-center flex items-center justify-center gap-2 transition ${isTodayDone ? 'bg-white/20 text-white/60 cursor-not-allowed' : 'bg-white text-blue-700 hover:bg-blue-50'}">오늘 일지 기록하기 <i data-lucide="chevron-right" class="w-4 h-4"></i></button>` 
+                    : '<div class="bg-white/10 p-3.5 rounded-xl text-xs text-center border border-white/15">현재는 독서 마라톤 기간(7/27~8/2)이 아닙니다.</div>'}
+                  <button onclick="navigate('mypage')" class="w-full py-3.5 rounded-xl font-semibold text-sm text-center bg-transparent border border-white/20 hover:bg-white/10 text-white transition">내 기록 확인하기</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function getWriteTemplate() {
+      const todayStr = getTodayDateString();
+      const myTodayLog = logs.find(l => l.userId === currentUser.id && l.date === todayStr);
+      const isPeriod = isMarathonPeriod();
+
+      if (!isPeriod && !editingLog) {
+        return `
+          <div class="max-w-xl mx-auto my-12 animate-fade-in">
+            <div class="bg-white rounded-3xl border border-slate-200 p-8 text-center space-y-4 shadow-sm">
+              <div class="p-3 bg-rose-50 text-rose-600 rounded-2xl w-fit mx-auto"><i data-lucide="calendar-off" class="w-8 h-8"></i></div>
+              <h2 class="text-xl font-black text-slate-900">독서일지 제출 기간이 아닙니다</h2>
+              <p class="text-sm text-slate-500 leading-relaxed">
+                2026 독서 마라톤 일지 제출 기간은 <strong class="text-blue-600">2026년 7월 27일 ~ 8월 2일</strong> 입니다.<br>
+                감사합니다.
+              </p>
+              <button onclick="navigate('main')" class="px-5 py-2.5 bg-slate-900 text-white font-bold text-xs rounded-xl">대회 홈으로 이동</button>
+            </div>
+          </div>
+        `;
+      }
+
+      if (myTodayLog && !editingLog) {
+        return `
+          <div class="max-w-xl mx-auto my-12 animate-fade-in">
+            <div class="bg-white rounded-3xl border border-slate-200 p-8 text-center space-y-4 shadow-sm">
+              <div class="p-3 bg-emerald-50 text-emerald-600 rounded-2xl w-fit mx-auto"><i data-lucide="check-circle" class="w-8 h-8"></i></div>
+              <h2 class="text-xl font-black text-slate-900">오늘의 독서일지 작성 완료</h2>
+              <p class="text-sm text-slate-500 leading-relaxed">
+                오늘(${todayStr}) 일지는 이미 성실히 등록되었습니다.<br>
+                내일 또 새로운 사색으로 만나요!
+              </p>
+              <div class="flex justify-center gap-3 pt-2">
+                <button onclick="openLogDetail('${myTodayLog.id}')" class="px-4 py-2.5 bg-blue-50 text-blue-600 font-bold text-xs rounded-xl hover:bg-blue-100 transition">작성 일지 확인</button>
+                <button onclick="editOwnLog('${myTodayLog.id}')" class="px-4 py-2.5 bg-slate-900 text-white font-bold text-xs rounded-xl hover:bg-slate-800 transition">일지 수정하기</button>
+              </div>
+            </div>
+          </div>
+        `;
+      }
+
+      return `
+        <div class="max-w-2xl mx-auto animate-fade-in">
+          <div class="bg-white rounded-3xl border border-slate-200/80 shadow-md overflow-hidden">
+            <div class="p-6 sm:p-8 bg-slate-900 text-white flex justify-between items-center">
+              <div>
+                <h2 class="text-xl font-black tracking-tight">${editingLog ? '독서일지 수정' : '오늘의 독서일지 작성'}</h2>
+                <p class="text-xs text-slate-400 mt-1">${editingLog ? '작성했던 내용을 수정합니다.' : `기록 일자: ${todayStr} (1일 1회 가능)`}</p>
+              </div>
+              <span class="px-3 py-1 bg-blue-600 text-white rounded-full text-xs font-bold">${currentUser.name} 님</span>
+            </div>
+
+            <form id="log-entry-form" class="p-6 sm:p-8 space-y-6">
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label for="book-title-input" class="block text-xs font-bold uppercase text-slate-500 mb-2">도서명 <span class="text-rose-500">*</span></label>
+                  <input id="book-title-input" type="text" required value="${editingLog ? editingLog.title : logForm.title}" placeholder="책 제목을 입력하세요" class="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-500/20">
+                </div>
+                <div>
+                  <label for="book-author-input" class="block text-xs font-bold uppercase text-slate-500 mb-2">저자명 <span class="text-rose-500">*</span></label>
+                  <input id="book-author-input" type="text" required value="${editingLog ? editingLog.author : logForm.author}" placeholder="저자 이름을 입력하세요" class="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-500/20">
+                </div>
+              </div>
+
+              <div>
+                <label for="book-range-input" class="block text-xs font-bold uppercase text-slate-500 mb-2">오늘 읽은 범위 <span class="text-rose-500">*</span></label>
+                <input id="book-range-input" type="text" required value="${editingLog ? editingLog.range : logForm.range}" placeholder="예: 120 ~ 165쪽 또는 3장 전반" class="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-500/20">
+              </div>
+
+              <div>
+                <div class="flex justify-between items-center mb-2">
+                  <label for="content-textarea" class="block text-xs font-bold uppercase text-slate-500">독서 노트 및 느낀 점 <span class="text-rose-500">*</span></label>
+                  <span id="char-counter-badge" class="text-xs font-bold px-2 py-1 rounded-full bg-rose-50 text-rose-600">
+                    글자 수: ${(editingLog ? editingLog.content : logForm.content).trim().length} / 최소 50자
+                  </span>
+                </div>
+                <textarea id="content-textarea" rows="7" required placeholder="오늘 책을 읽고 느낀 가치관의 변화, 깨달음, 인상 깊은 구절에 대한 내 생각을 50자 이상 작성해 주세요. (붙여넣기 방지)" class="w-full p-4 rounded-xl border border-slate-200 text-sm font-medium leading-relaxed focus:outline-none focus:ring-2 focus:ring-blue-500/20">${editingLog ? editingLog.content : logForm.content}</textarea>
+                <div id="validation-warning" class="mt-2 text-xs text-rose-500 font-bold hidden">
+                  ⚠️ 작성된 내용이 부족합니다. (추가 필요 글자 수: <span id="missing-char-count">50</span>자)
+                </div>
+              </div>
+
+              <div class="flex gap-3">
+                ${editingLog ? `<button type="button" onclick="cancelEditingLog()" class="w-1/3 py-3.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-sm transition">취소</button>` : ''}
+                <button type="submit" class="flex-1 py-3.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl text-sm transition shadow-md shadow-blue-500/20 flex items-center justify-center gap-2">
+                  <i data-lucide="check" class="w-4 h-4"></i>${editingLog ? '수정 완료하기' : '오늘의 일지 제출하기'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      `;
+    }
+
+    function getMypageTemplate() {
+      const myLogs = logs.filter(l => l.userId === currentUser.id);
+      const totalChars = myLogs.reduce((acc, l) => acc + l.length, 0);
+
+      const badges = [
+        { min: 1, label: '🌱 새싹 러너', desc: '1일 이상 참여', color: 'border-emerald-300 text-emerald-800 bg-emerald-50' },
+        { min: 3, label: '🏃 페이스 메이커', desc: '3일 이상 참여', color: 'border-sky-300 text-sky-800 bg-sky-50' },
+        { min: 5, label: '⚡ 지혜의 레이서', desc: '5일 이상 참여', color: 'border-amber-400 text-amber-800 bg-amber-50 shadow-sm' },
+        { min: 7, label: '👑 완주 Master', desc: '7일 완주 성공!', color: 'border-purple-300 text-purple-800 bg-purple-50' }
+      ];
+
+      let badgesHtml = '';
+      badges.forEach(b => {
+        const unlocked = myLogs.length >= b.min;
+        badgesHtml += `
+          <div class="p-4 rounded-2xl border text-center ${unlocked ? b.color : 'bg-slate-50 border-slate-200 opacity-40'}">
+            <span class="text-2xl block mb-2">${b.label.substring(0, 2)}</span>
+            <p class="text-sm font-bold text-slate-900">${b.label.substring(2)}</p>
+            <p class="text-[10px] text-slate-400 mt-1">${b.desc}</p>
+          </div>
+        `;
+      });
+
+      let tableRows = '';
+      if (myLogs.length > 0) {
+        myLogs.forEach(log => {
+          tableRows += `
+            <tr class="hover:bg-slate-50/50 transition border-b border-slate-100">
+              <td class="py-4 px-6 font-mono text-slate-500">${log.date}</td>
+              <td class="py-4 px-6 font-bold text-slate-900">${log.title}</td>
+              <td class="py-4 px-6 text-slate-500">${log.author}</td>
+              <td class="py-4 px-6"><span class="bg-slate-100 px-2.5 py-1 rounded text-xs text-slate-600 font-semibold font-mono">${log.range}</span></td>
+              <td class="py-4 px-6 font-semibold font-mono text-slate-600">${log.length}자</td>
+              <td class="py-4 px-6 text-center">
+                <div class="flex items-center justify-center gap-2">
+                  <button onclick="openLogDetail('${log.id}')" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-xs text-slate-700 font-bold rounded-lg transition">전문 보기</button>
+                  <button onclick="editOwnLog('${log.id}')" class="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition"><i data-lucide="edit-3" class="w-4 h-4"></i></button>
+                </div>
+              </td>
+            </tr>
+          `;
+        });
+      } else {
+        tableRows = `
+          <tr>
+            <td colspan="6" class="p-12 text-center text-slate-400">
+              <i data-lucide="file-text" class="w-12 h-12 text-slate-300 mx-auto mb-3"></i>
+              <p class="text-sm">아직 작성하신 일지가 없습니다.</p>
+              <button onclick="navigate('write')" class="mt-3 px-4 py-2 bg-blue-50 text-blue-600 text-xs font-bold rounded-xl hover:bg-blue-100 transition">첫 일지 쓰러 가기</button>
+            </td>
+          </tr>
+        `;
+      }
+
+      return `
+        <div class="space-y-6 animate-fade-in">
+          <div class="bg-white rounded-3xl p-6 border border-slate-200/80 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-6">
+            <div class="flex items-center gap-4">
+              <div class="p-3 bg-blue-50 rounded-2xl"><i data-lucide="user" class="w-8 h-8 text-blue-600"></i></div>
+              <div>
+                <h2 class="text-xl font-black text-slate-900 tracking-tight flex items-center gap-2">
+                  ${currentUser.name} 님의 마라톤 완주 레이스
+                  <span class="text-xs font-semibold px-2 py-0.5 bg-blue-100 text-blue-800 rounded-full">${currentUser.role === 'student' ? '학생' : '교직원'}</span>
+                </h2>
+                <p class="text-xs text-slate-400 font-mono mt-0.5">식별 번호: ${currentUser.id}</p>
+              </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-4 text-center">
+              <div class="bg-slate-50 border border-slate-100 px-5 py-3 rounded-2xl">
+                <span class="text-xs font-bold text-slate-400">총 기록 횟수</span>
+                <p class="text-lg font-black text-blue-600 mt-1">${myLogs.length}회</p>
+              </div>
+              <div class="bg-slate-50 border border-slate-100 px-5 py-3 rounded-2xl">
+                <span class="text-xs font-bold text-slate-400">총 작성 글자 수</span>
+                <p class="text-lg font-black text-slate-800 mt-1">${totalChars.toLocaleString()}자</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="bg-white rounded-3xl p-6 border border-slate-200/80 shadow-sm">
+            <h3 class="text-base font-extrabold text-slate-955 mb-3 tracking-tight">내가 획득한 명예 배지</h3>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">${badgesHtml}</div>
+          </div>
+
+          <div class="bg-white rounded-3xl border border-slate-200/80 shadow-sm overflow-hidden">
+            <div class="p-6 border-b border-slate-100">
+              <h3 class="text-lg font-extrabold text-slate-955 tracking-tight">내가 작성한 독서일지 목록</h3>
+            </div>
+            <div class="overflow-x-auto">
+              <table class="w-full text-left border-collapse">
+                <thead>
+                  <tr class="bg-slate-50 border-b border-slate-100 text-xs font-bold text-slate-400 uppercase tracking-wider">
+                    <th class="py-4 px-6">작성일</th>
+                    <th class="py-4 px-6">책 제목</th>
+                    <th class="py-4 px-6">저자</th>
+                    <th class="py-4 px-6">읽은 범위</th>
+                    <th class="py-4 px-6">작성 글자 수</th>
+                    <th class="py-4 px-6 text-center">동작</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100 text-sm font-medium text-slate-700">${tableRows}</tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function getAdminLockTemplate() {
+      return `
+        <div class="max-w-md mx-auto my-12 animate-fade-in">
+          <div class="bg-white rounded-3xl border border-slate-200/80 p-8 shadow-xl">
+            <div class="text-center space-y-3 mb-6">
+              <div class="p-3 bg-amber-50 rounded-2xl w-fit mx-auto"><i data-lucide="settings" class="w-8 h-8 text-amber-500"></i></div>
+              <h2 class="text-xl font-black text-slate-955 tracking-tight">관리자 인증</h2>
+              <p class="text-xs text-slate-500">대회 운영진 및 교직원 관리용 보안 페이지입니다.</p>
+            </div>
+
+            <form id="admin-auth-form" class="space-y-4">
+              <div>
+                <label for="adminPass" class="block text-xs font-bold text-slate-500 mb-2 uppercase tracking-wider">관리자 비밀번호 입력</label>
+                <input id="adminPass" type="password" required placeholder="비밀번호" class="w-full px-4 py-3.5 rounded-xl border border-slate-200 text-center focus:outline-none focus:ring-2 focus:ring-blue-500/20">
+              </div>
+              <button type="submit" class="w-full py-3.5 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-sm font-bold transition">관리자 대시보드 입장</button>
+              <div class="p-3 bg-slate-50 border border-slate-100 rounded-xl text-[10px] text-slate-400 leading-relaxed">
+                💡 <strong>안내:</strong> 관리자용 초기 비밀번호는 <strong class="text-blue-600 font-mono">${adminPassword}</strong> 입니다.
+              </div>
+            </form>
+          </div>
+        </div>
+      `;
+    }
+
+    // ----------------------------------------------------------------------
+    // DYNAMIC PRIZE EDITING HANDLERS
+    // ----------------------------------------------------------------------
+    function addPrizeItem() {
+      const nameInput = document.getElementById('new-prize-name-input');
+      const countInput = document.getElementById('new-prize-count-input');
+
+      const name = nameInput.value.trim();
+      const count = parseInt(countInput.value);
+
+      if (!name) {
+        showNotification('경품 상품명을 정확히 기재해 주세요.', 'error');
+        return;
+      }
+      if (isNaN(count) || count <= 0) {
+        showNotification('경품의 선발 수량은 1개 이상이어야 합니다.', 'error');
+        return;
+      }
+
+      const newItem = {
+        id: `prize-${Date.now()}`,
+        name: name,
+        count: count
+      };
+
+      prizeItems.push(newItem);
+      localStorage.setItem(`${STORAGE_PREFIX}prize_items`, JSON.stringify(prizeItems));
+      
+      nameInput.value = '';
+      countInput.value = '1';
+      
+      showNotification(`"${name}" 상품이 총 ${count}개로 신규 추가되었습니다.`);
+      renderApp();
+    }
+
+    function removePrizeItem(id) {
+      prizeItems = prizeItems.filter(item => item.id !== id);
+      localStorage.setItem(`${STORAGE_PREFIX}prize_items`, JSON.stringify(prizeItems));
+      showNotification('경품 상품이 목록에서 제거되었습니다.');
+      renderApp();
+    }
+
+    function updatePrizeCount(id, value) {
+      const count = parseInt(value);
+      if (isNaN(count) || count <= 0) return;
+      
+      prizeItems = prizeItems.map(item => {
+        if (item.id === id) {
+          return { ...item, count: count };
+        }
+        return item;
+      });
+      localStorage.setItem(`${STORAGE_PREFIX}prize_items`, JSON.stringify(prizeItems));
+    }
+
+    function switchAdminMenu(menu) {
+      adminMenu = menu;
+      renderApp();
+    }
+
+    function getAdminDashboardTemplate() {
+      const uStats = getUserStats();
+      const totP = uStats.length;
+      const stud = uStats.filter(u => u.role === 'student').length;
+      const stf = uStats.filter(u => u.role === 'staff').length;
+      const totL = logs.length;
+      const avgP = totP > 0 ? (totL / totP).toFixed(1) : '0';
+      const pRate = totP > 0 ? Math.min(100, Math.round((totL / (totP * 7)) * 100)) : 0;
+      
+      const todayStr = getTodayDateString();
+      const todayLogs = logs.filter(l => l.date === todayStr);
+
+      let adminNavHtml = `
+        <div class="border-b border-slate-200 mb-6">
+          <nav class="flex gap-4 overflow-x-auto">
+            <button onclick="switchAdminMenu('dashboard')" class="pb-4 px-2 font-bold text-sm border-b-2 transition-all whitespace-nowrap ${adminMenu === 'dashboard' ? 'border-blue-600 text-blue-600' : 'border-transparent text-slate-500'}">📊 관리자 대시보드</button>
+            <button onclick="switchAdminMenu('users')" class="pb-4 px-2 font-bold text-sm border-b-2 transition-all whitespace-nowrap ${adminMenu === 'users' ? 'border-blue-600 text-blue-600' : 'border-transparent text-slate-500'}">👥 참여자 관리</button>
+            <button onclick="switchAdminMenu('logs')" class="pb-4 px-2 font-bold text-sm border-b-2 transition-all whitespace-nowrap ${adminMenu === 'logs' ? 'border-blue-600 text-blue-600' : 'border-transparent text-slate-500'}">📝 독서일지 관리</button>
+            <button onclick="switchAdminMenu('lottery')" class="pb-4 px-2 font-bold text-sm border-b-2 transition-all whitespace-nowrap ${adminMenu === 'lottery' ? 'border-blue-600 text-blue-600' : 'border-transparent text-slate-500'}">🎟️ 경품 추첨 시스템</button>
+            <button onclick="switchAdminMenu('filedb')" class="pb-4 px-2 font-bold text-sm border-b-2 transition-all whitespace-nowrap ${adminMenu === 'filedb' ? 'border-blue-600 text-blue-600' : 'border-transparent text-slate-500'}">💾 가상 DB 파일 제어</button>
+            <button onclick="switchAdminMenu('password')" class="pb-4 px-2 font-bold text-sm border-b-2 transition-all whitespace-nowrap ${adminMenu === 'password' ? 'border-blue-600 text-blue-600' : 'border-transparent text-slate-500'}">🔑 비밀번호 변경</button>
+          </nav>
+        </div>
+      `;
+
+      let viewBody = '';
+
+      if (adminMenu === 'dashboard') {
+        let todayRows = '';
+        if (todayLogs.length > 0) {
+          todayLogs.forEach(log => {
+            todayRows += `
+              <div class="p-3 bg-slate-50 rounded-xl border border-slate-100 flex items-center justify-between">
+                <div>
+                  <p class="font-bold text-sm text-slate-800">${log.userName}</p>
+                  <p class="text-[11px] text-slate-400">${log.userRole === 'student' ? '학생' : '교직원'} • ${log.userNo}</p>
+                </div>
+                <div class="text-right">
+                  <p class="text-xs font-semibold text-slate-700 truncate max-w-[120px]">${log.title}</p>
+                  <span class="text-[10px] bg-blue-50 text-blue-600 font-bold px-1.5 py-0.5 rounded">${log.range}</span>
+                </div>
+              </div>
+            `;
+          });
+        } else {
+          todayRows = `<p class="text-center py-10 text-slate-400 text-xs">오늘 작성된 일지가 아직 없습니다.</p>`;
+        }
+
+        let feedRows = '';
+        logs.slice(0, 4).forEach(log => {
+          feedRows += `
+            <div class="p-4 bg-slate-50 hover:bg-slate-100/50 transition rounded-2xl border border-slate-100 flex justify-between items-start">
+              <div class="space-y-2 max-w-[80%]">
+                <div class="flex items-center gap-2">
+                  <span class="font-bold text-slate-900 text-sm">${log.userName}</span>
+                  <span class="text-[9px] px-1.5 py-0.2 bg-slate-100 rounded font-bold">${log.userRole === 'student' ? '학생' : '교직원'}</span>
+                  <span class="text-[10px] text-slate-400 font-mono">${log.date}</span>
+                </div>
+                <h4 class="text-xs font-bold text-slate-700">《${log.title}》 • ${log.author}</h4>
+                <p class="text-xs text-slate-500 line-clamp-2 leading-relaxed">${log.content}</p>
+              </div>
+              <button onclick="openLogDetail('${log.id}')" class="text-xs text-blue-600 hover:underline font-bold">검수</button>
+            </div>
+          `;
+        });
+
+        viewBody = `
+          <div class="grid grid-cols-2 lg:grid-cols-6 gap-4 mb-6">
+            <div class="bg-white rounded-2xl p-5 border border-slate-200/80 text-center">
+              <span class="text-[11px] font-bold text-slate-400 block">총 참여자 수</span>
+              <p class="text-xl font-black text-slate-900 mt-1">${totP}명</p>
+            </div>
+            <div class="bg-white rounded-2xl p-5 border border-slate-200/80 text-center">
+              <span class="text-[11px] font-bold text-slate-400 block">학생 참여자</span>
+              <p class="text-xl font-black text-blue-600 mt-1">${stud}명</p>
+            </div>
+            <div class="bg-white rounded-2xl p-5 border border-slate-200/80 text-center">
+              <span class="text-[11px] font-bold text-slate-400 block">교직원 참여자</span>
+              <p class="text-xl font-black text-purple-600 mt-1">${stf}명</p>
+            </div>
+            <div class="bg-white rounded-2xl p-5 border border-slate-200/80 text-center">
+              <span class="text-[11px] font-bold text-slate-400 block">총 일지 수</span>
+              <p class="text-xl font-black text-emerald-600 mt-1">${totL}건</p>
+            </div>
+            <div class="bg-white rounded-2xl p-5 border border-slate-200/80 text-center">
+              <span class="text-[11px] font-bold text-slate-400 block">평균 기록 수</span>
+              <p class="text-xl font-black text-amber-600 mt-1">${avgP}회</p>
+            </div>
+            <div class="bg-white rounded-2xl p-5 border border-slate-200/80 text-center">
+              <span class="text-[11px] font-bold text-slate-400 block">목표 참여율</span>
+              <p class="text-xl font-black text-pink-600 mt-1">${pRate}%</p>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div class="bg-white rounded-3xl border border-slate-200/80 p-6">
+              <div class="flex justify-between items-center mb-4">
+                <h3 class="font-extrabold text-slate-900 flex items-center gap-2"><i data-lucide="activity" class="w-5 h-5 text-emerald-500"></i>오늘 참여자</h3>
+                <span class="text-xs bg-emerald-50 text-emerald-600 px-2.5 py-1 rounded-full font-bold">오늘 ${todayLogs.length}명 작성</span>
+              </div>
+              <div class="space-y-3 max-h-[350px] overflow-y-auto">${todayRows}</div>
+            </div>
+
+            <div class="lg:col-span-2 bg-white rounded-3xl border border-slate-200/80 p-6">
+              <h3 class="font-extrabold text-slate-900 flex items-center gap-2 mb-4"><i data-lucide="file-text" class="w-5 h-5 text-blue-500"></i>최근 업로드 피드</h3>
+              <div class="space-y-4 max-h-[350px] overflow-y-auto">${feedRows}</div>
+            </div>
+          </div>
+        `;
+      } else if (adminMenu === 'users') {
+        const filteredUsers = uStats.filter(u => {
+          const k = searchUserKeyword.toLowerCase().trim();
+          return u.name.toLowerCase().includes(k) || u.id.toLowerCase().includes(k);
+        }).sort((a, b) => userSortOrder === 'desc' ? b.count - a.count : a.count - b.count);
+
+        let userRowsHtml = '';
+        if (filteredUsers.length > 0) {
+          filteredUsers.forEach(user => {
+            userRowsHtml += `
+              <div class="p-4 flex items-center justify-between text-sm hover:bg-slate-50 transition border-b border-slate-100">
+                <div>
+                  <p class="font-bold text-slate-900 flex items-center gap-1.5">
+                    ${user.name}
+                    <span class="text-[9px] font-bold px-1.5 py-0.2 rounded ${user.role === 'student' ? 'bg-blue-50 text-blue-600' : 'bg-purple-50 text-purple-600'}">${user.role === 'student' ? '학생' : '교직원'}</span>
+                  </p>
+                  <p class="text-[10px] text-slate-400 font-mono">ID: ${user.id} • 가입일: ${user.signupDate}</p>
+                </div>
+                <div class="text-right">
+                  <span class="text-sm font-black text-slate-800">${user.count}회 참여</span>
+                  <p class="text-[10px] text-slate-400">${user.books.size}종의 도서</p>
+                </div>
+              </div>
+            `;
+          });
+        } else {
+          userRowsHtml = '<p class="text-center py-8 text-xs text-slate-400">조건에 부합하는 참여자가 없습니다.</p>';
+        }
+
+        viewBody = `
+          <div class="bg-white rounded-3xl border border-slate-200/80 overflow-hidden">
+            <div class="p-6 border-b border-slate-100 bg-slate-50/50">
+              <div class="flex justify-between items-center flex-wrap gap-4">
+                <h3 class="text-base font-extrabold text-slate-900">전체 로그인 가입 회원 목록 (${filteredUsers.length}명)</h3>
+                <button onclick="toggleUserSort()" class="text-xs text-blue-600 hover:underline flex items-center gap-1 font-semibold">
+                  참여 횟수순 ${userSortOrder === 'desc' ? '▼' : '▲'}
+                </button>
+              </div>
+              <p class="text-xs text-slate-400 mt-1">로그인 폼을 거쳐간 모든 사용자 정보가 영구 보존됩니다.</p>
+              <div class="relative mt-4">
+                <input type="text" oninput="setSearchUserKeyword(this.value)" value="${searchUserKeyword}" placeholder="이름 또는 학번/사번 검색..." class="w-full pl-4 pr-4 py-2 text-xs rounded-xl border border-slate-200 focus:outline-none focus:ring-1 focus:ring-blue-500">
+              </div>
+            </div>
+            <div class="divide-y divide-slate-100 max-h-[500px] overflow-y-auto">${userRowsHtml}</div>
+          </div>
+        `;
+      } else if (adminMenu === 'logs') {
+        const filteredLogs = logs.filter(l => {
+          const k = searchLogKeyword.toLowerCase().trim();
+          return l.userName.toLowerCase().includes(k) || l.userNo.toLowerCase().includes(k) || l.title.toLowerCase().includes(k) || l.content.toLowerCase().includes(k);
+        }).sort((a, b) => {
+          const da = new Date(a.date).getTime();
+          const db = new Date(b.date).getTime();
+          return logSortOrder === 'desc' ? db - da : da - db;
+        });
+
+        let logRowsHtml = '';
+        if (filteredLogs.length > 0) {
+          filteredLogs.forEach(log => {
+            logRowsHtml += `
+              <tr class="hover:bg-slate-50/40 transition border-b border-slate-100">
+                <td class="py-3 px-4 font-mono text-slate-500 whitespace-nowrap">${log.date}</td>
+                <td class="py-3 px-4 font-bold text-slate-900 whitespace-nowrap">
+                  ${log.userName}
+                  <span class="ml-1 text-[9px] font-semibold px-1 rounded ${log.userRole === 'student' ? 'bg-blue-50 text-blue-600' : 'bg-purple-50 text-purple-600'}">${log.userRole === 'student' ? '학생' : '교직원'}</span>
+                </td>
+                <td class="py-3 px-4 font-mono text-slate-400">${log.userNo}</td>
+                <td class="py-3 px-4 font-bold text-slate-800 truncate max-w-[120px]">${log.title}</td>
+                <td class="py-3 px-4"><span class="bg-slate-100 px-1.5 py-0.5 rounded text-slate-500 font-mono">${log.range}</span></td>
+                <td class="py-3 px-4 text-center font-mono text-slate-600">${log.length}자</td>
+                <td class="py-3 px-4 text-right">
+                  <div class="flex items-center justify-end gap-1.5">
+                    <button onclick="openLogDetail('${log.id}')" class="px-2 py-1 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded text-[10px]">전문</button>
+                    <button onclick="editLogByAdmin('${log.id}')" class="p-1 text-blue-600 hover:bg-blue-50 rounded"><i data-lucide="edit-3" class="w-3.5 h-3.5"></i></button>
+                    <button onclick="deleteLogByAdmin('${log.id}')" class="p-1 text-rose-600 hover:bg-rose-50 rounded"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>
+                  </div>
+                </td>
+              </tr>
+            `;
+          });
+        } else {
+          logRowsHtml = `<tr><td colspan="7" class="text-center py-12 text-sm text-slate-400">조건에 부합하는 일지 데이터가 없습니다.</td></tr>`;
+        }
+
+        viewBody = `
+          <div class="bg-white rounded-3xl border border-slate-200/80 shadow-sm overflow-hidden">
+            <div class="p-6 border-b border-slate-100 bg-slate-50/50 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div>
+                <h3 class="text-base font-extrabold text-slate-900">전체 독서일지 통합 관리 (${filteredLogs.length}건)</h3>
+              </div>
+              <div class="flex gap-2">
+                <button onclick="downloadLogsExcel()" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-lg transition flex items-center gap-1">
+                  <i data-lucide="file-spreadsheet" class="w-3.5 h-3.5"></i>엑셀 내보내기
+                </button>
+                <button onclick="toggleLogSort()" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-xs text-slate-700 font-semibold rounded-lg">
+                  정렬: ${logSortOrder === 'desc' ? '최신 등록순' : '과거 등록순'}
+                </button>
+              </div>
+            </div>
+            <div class="p-4 bg-slate-50 border-b border-slate-100">
+              <input type="text" oninput="setSearchLogKeyword(this.value)" value="${searchLogKeyword}" placeholder="작성자, 도서명, 핵심 내용 키워드 검색..." class="w-full px-4 py-2 text-sm rounded-xl border border-slate-200 focus:outline-none focus:ring-1 focus:ring-blue-500">
+            </div>
+            <div class="overflow-x-auto max-h-[500px]">
+              <table class="w-full text-left border-collapse">
+                <thead>
+                  <tr class="bg-slate-50/50 text-[11px] font-bold text-slate-400 uppercase tracking-wider border-b border-slate-100">
+                    <th class="py-3 px-4">날짜</th>
+                    <th class="py-3 px-4">작성자</th>
+                    <th class="py-3 px-4">식별ID</th>
+                    <th class="py-3 px-4">도서명</th>
+                    <th class="py-3 px-4">범위</th>
+                    <th class="py-3 px-4 text-center">글자수</th>
+                    <th class="py-3 px-4 text-right">동작</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100 text-xs font-semibold text-slate-700">${logRowsHtml}</tbody>
+              </table>
+            </div>
+          </div>
+        `;
+      } else if (adminMenu === 'lottery') {
+        const candidates = getSurveySubmissions();
+        const savedLottery = localStorage.getItem(`${STORAGE_PREFIX}lottery_winners`);
+        const winners = savedLottery ? JSON.parse(savedLottery) : null;
+
+        let candidateRows = '';
+        let totalTickets = 0;
+        candidates.forEach(c => {
+          totalTickets += c.tickets;
+          candidateRows += `
+            <div class="flex items-center justify-between p-2.5 bg-slate-50 rounded-xl text-xs font-semibold text-slate-700 border border-slate-100">
+              <div>
+                <p class="font-bold text-slate-800">${c.userName} (${c.userId})</p>
+                <p class="text-[10px] text-slate-400">만족도평가: ${'★'.repeat(c.progRating)} (Q1)</p>
+              </div>
+              <div class="text-right">
+                <span class="bg-blue-50 border border-blue-100 text-blue-700 px-2.5 py-1 rounded-lg font-black text-[11px]">응모권 ${c.tickets}장</span>
+              </div>
+            </div>
+          `;
+        });
+
+        if (candidates.length === 0) {
+          candidateRows = `<p class="text-slate-400 text-center py-6 text-xs">만족도 조사에 응답한 후보군이 존재하지 않습니다.</p>`;
+        }
+
+        let prizeEditorRows = '';
+        prizeItems.forEach(item => {
+          prizeEditorRows += `
+            <div class="flex items-center justify-between gap-4 p-2 bg-slate-50 rounded-xl border border-slate-100">
+              <span class="text-xs font-bold text-slate-700 truncate flex-1">${item.name}</span>
+              <div class="flex items-center gap-2">
+                <input type="number" min="1" value="${item.count}" onchange="updatePrizeCount('${item.id}', this.value)" class="w-16 px-2 py-1 text-xs rounded border border-slate-200 text-center font-bold">
+                <button onclick="removePrizeItem('${item.id}')" class="p-1 text-rose-600 hover:bg-rose-50 rounded" title="제거">
+                  <i data-lucide="minus-circle" class="w-4 h-4"></i>
+                </button>
+              </div>
+            </div>
+          `;
+        });
+        if (prizeItems.length === 0) {
+          prizeEditorRows = '<p class="text-center text-xs text-slate-400 py-4">등록된 경품이 없습니다. 아래 폼에서 추가하세요.</p>';
+        }
+
+        let winnersDashboard = '';
+        if (winners && winners.length > 0) {
+          let winnersRows = '';
+          winners.forEach(w => {
+            winnersRows += `
+              <tr class="hover:bg-slate-50 text-xs font-semibold text-slate-700 border-b border-slate-100">
+                <td class="py-3 px-4 font-extrabold text-blue-700 font-mono text-left">${w.prize}</td>
+                <td class="py-3 px-4 text-slate-900 font-bold">${w.userName}</td>
+                <td class="py-3 px-4 font-mono text-slate-400">${w.userId}</td>
+                <td class="py-3 px-4">${w.userRole === 'student' ? '학생' : '교직원'}</td>
+                <td class="py-3 px-4 font-mono font-bold text-slate-500">${w.tickets}장</td>
+                <td class="py-3 px-4 text-slate-400 text-right">${w.time}</td>
+              </tr>
+            `;
+          });
+
+          winnersDashboard = `
+            <div class="space-y-4 animate-fade-in">
+              <div class="flex items-center justify-between">
+                <h4 class="font-extrabold text-sm text-slate-800 flex items-center gap-2">🎉 최종 경품 추첨 결과 확인</h4>
+                <div class="flex gap-2">
+                  <button onclick="downloadLotteryReport()" class="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl transition flex items-center gap-1">
+                    <i data-lucide="download" class="w-3.5 h-3.5"></i>결과 엑셀 다운로드
+                  </button>
+                  <button onclick="resetLottery()" class="px-3.5 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-600 font-bold text-xs rounded-xl transition border border-rose-200">
+                    재추첨
+                  </button>
+                </div>
+              </div>
+              <div class="overflow-x-auto bg-white rounded-2xl border border-slate-100">
+                <table class="w-full text-left border-collapse">
+                  <thead>
+                    <tr class="bg-slate-50 text-[10px] font-bold text-slate-400 uppercase border-b border-slate-100">
+                      <th class="py-2.5 px-4">당첨 상품</th>
+                      <th class="py-2.5 px-4">당첨자 명단</th>
+                      <th class="py-2.5 px-4">학번/사번</th>
+                      <th class="py-2.5 px-4">구분</th>
+                      <th class="py-2.5 px-4">보유 응모권</th>
+                      <th class="py-2.5 px-4 text-right">추첨 일시</th>
+                    </tr>
+                  </thead>
+                  <tbody>${winnersRows}</tbody>
+                </table>
+              </div>
+            </div>
+          `;
+        } else {
+          winnersDashboard = `
+            <div class="p-8 text-center bg-slate-50 border border-slate-100 rounded-2xl space-y-3">
+              <i data-lucide="sparkles" class="w-10 h-10 text-amber-500 mx-auto"></i>
+              <h4 class="font-bold text-sm text-slate-800">아직 경품 추첨을 실행하지 않았습니다</h4>
+              <p class="text-xs text-slate-500 max-w-md mx-auto">
+                가중치 공정 추첨 알고리즘에 따라 독서일지 참여 일수가 높은 러너에게 더 높은 당첨 확률을 부여하여 경품을 자동 추첨합니다.
+              </p>
+              <button onclick="runLottery()" class="mt-2 px-6 py-3 bg-purple-600 hover:bg-purple-700 text-white font-extrabold text-xs rounded-xl shadow-lg shadow-purple-500/20 transition flex items-center gap-2 mx-auto">
+                <i data-lucide="play" class="w-4 h-4 fill-current"></i>공정 경품 추첨 알고리즘 가동
+              </button>
+            </div>
+          `;
+        }
+
+        viewBody = `
+          <div class="space-y-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <!-- Left: Candidates List -->
+              <div class="bg-white rounded-3xl border border-slate-200/80 p-6 space-y-4">
+                <div class="flex justify-between items-center border-b pb-3">
+                  <div>
+                    <h3 class="font-extrabold text-sm text-slate-900">만족도 조사 제출자 (추첨 대상)</h3>
+                    <p class="text-[10px] text-slate-400 mt-0.5">총 ${candidates.length}명 • 누적 응모권 ${totalTickets}장</p>
+                  </div>
+                </div>
+                <div class="space-y-2 max-h-[300px] overflow-y-auto">${candidateRows}</div>
+              </div>
+
+              <!-- Right: Prize Editor -->
+              <div class="bg-white rounded-3xl border border-slate-200/80 p-6 space-y-4">
+                <div class="flex justify-between items-center border-b pb-3">
+                  <div>
+                    <h3 class="font-extrabold text-sm text-slate-900">경품 관리 및 수량 설정</h3>
+                    <p class="text-[10px] text-slate-400 mt-0.5">추첨 대상이 되는 경품 목록을 변경할 수 있습니다.</p>
+                  </div>
+                </div>
+                <div class="space-y-2 max-h-[200px] overflow-y-auto">${prizeEditorRows}</div>
+
+                <div class="pt-2 border-t flex items-center gap-2">
+                  <input id="new-prize-name-input" type="text" placeholder="새 경품 이름" class="flex-1 px-3 py-2 text-xs border rounded-xl focus:outline-none">
+                  <input id="new-prize-count-input" type="number" min="1" value="1" class="w-16 px-2 py-2 text-xs border rounded-xl text-center font-bold">
+                  <button onclick="addPrizeItem()" class="px-3 py-2 bg-slate-900 text-white text-xs font-bold rounded-xl hover:bg-slate-800 transition">추가</button>
+                </div>
+              </div>
+            </div>
+
+            <div class="bg-white rounded-3xl border border-slate-200/80 p-6">${winnersDashboard}</div>
+          </div>
+        `;
+      } else if (adminMenu === 'filedb') {
+        viewBody = `
+          <div class="space-y-6">
+            <div class="bg-white rounded-3xl border border-slate-200/80 p-6 space-y-4">
+              <h3 class="font-extrabold text-base text-slate-900 flex items-center gap-2">
+                <i data-lucide="database" class="w-5 h-5 text-blue-600"></i>가상 데이터베이스(Virtual DB File) 내보내기/복원
+              </h3>
+              <p class="text-xs text-slate-500 leading-relaxed">
+                본 웹 애플리케이션은 별도의 로컬 서버 없이 영구적인 가상 JSON 데이터베이스 저장소를 구축하여 작동합니다.<br>
+                대회 데이터를 안전하게 백업하거나 백업 파일을 불러와 시스템을 원래 상태로 백업/복원할 수 있습니다.
+              </p>
+
+              <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-4">
+                <button onclick="exportVirtualDb()" class="p-5 bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-2xl text-left transition group">
+                  <i data-lucide="download" class="w-6 h-6 text-blue-600 mb-2"></i>
+                  <p class="font-extrabold text-sm text-blue-900">가상 DB 내보내기</p>
+                  <p class="text-[10px] text-blue-600 mt-1">.json 파일 형태로 백업 다운로드</p>
+                </button>
+
+                <label class="p-5 bg-purple-50 hover:bg-purple-100 border border-purple-200 rounded-2xl text-left transition cursor-pointer">
+                  <i data-lucide="upload" class="w-6 h-6 text-purple-600 mb-2"></i>
+                  <p class="font-extrabold text-sm text-purple-900">가상 DB 복원하기</p>
+                  <p class="text-[10px] text-purple-600 mt-1">백업된 .json 파일 업로드</p>
+                  <input type="file" accept=".json" onchange="importVirtualDb(event)" class="hidden">
+                </label>
+
+                <button onclick="resetVirtualDb()" class="p-5 bg-rose-50 hover:bg-rose-100 border border-rose-200 rounded-2xl text-left transition">
+                  <i data-lucide="refresh-cw" class="w-6 h-6 text-rose-600 mb-2"></i>
+                  <p class="font-extrabold text-sm text-rose-900">초기 상태 리셋</p>
+                  <p class="text-[10px] text-rose-600 mt-1">기본 시뮬레이션 데모 데이터로 복원</p>
+                </button>
+              </div>
+            </div>
+          </div>
+        `;
+      } else if (adminMenu === 'password') {
+        viewBody = `
+          <div class="max-w-md mx-auto bg-white rounded-3xl border border-slate-200/80 p-6 space-y-4">
+            <h3 class="font-extrabold text-base text-slate-900 flex items-center gap-2">
+              <i data-lucide="key" class="w-5 h-5 text-amber-500"></i>관리자 비밀번호 변경
+            </h3>
+            <p class="text-xs text-slate-500">관리자 인증에 사용할 신규 비밀번호를 지정하세요.</p>
+
+            <form onsubmit="changeAdminPassword(event)" class="space-y-4 pt-2">
+              <div>
+                <label for="new-pass-input" class="block text-xs font-bold text-slate-500 mb-1">새 비밀번호</label>
+                <input id="new-pass-input" type="password" required placeholder="신규 비밀번호 입력" class="w-full px-4 py-3 text-xs rounded-xl border border-slate-200 focus:outline-none focus:ring-1 focus:ring-blue-500">
+              </div>
+              <button type="submit" class="w-full py-3 bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs rounded-xl transition">비밀번호 변경 완료</button>
+            </form>
+          </div>
+        `;
+      }
+
+      return `
+        <div class="space-y-6 animate-fade-in">
+          <div class="flex items-center justify-between bg-white rounded-3xl p-6 border border-slate-200/80 shadow-sm">
+            <div>
+              <span class="text-xs font-bold bg-slate-100 text-slate-600 px-3 py-1 rounded-full uppercase tracking-wider">Songho Library Admin</span>
+              <h2 class="text-xl font-black text-slate-900 tracking-tight mt-2">사서교사 통합 일지 관리 시스템</h2>
+            </div>
+            <button onclick="handleAdminLogout()" class="px-4 py-2 bg-rose-50 text-rose-700 font-bold text-xs rounded-xl hover:bg-rose-100 transition border border-rose-200">관리자 잠금</button>
+          </div>
+
+          ${adminNavHtml}
+          ${viewBody}
+        </div>
+      `;
+    }
+
+    // ----------------------------------------------------------------------
+    // LOG SAVE / EDIT / DELETE ACTION HANDLERS
+    // ----------------------------------------------------------------------
+    function handleSaveLogSubmit(e) {
+      e.preventDefault();
+      if (!currentUser) return;
+
+      const title = document.getElementById('book-title-input').value.trim();
+      const author = document.getElementById('book-author-input').value.trim();
+      const range = document.getElementById('book-range-input').value.trim();
+      const content = document.getElementById('content-textarea').value.trim();
+
+      if (content.length < 50) {
+        showNotification('느낀 점은 최소 50자 이상 작성하셔야 합니다.', 'error');
+        return;
+      }
+
+      if (editingLog) {
+        // Update existing log
+        logs = logs.map(l => {
+          if (l.id === editingLog.id) {
+            return {
+              ...l,
+              title,
+              author,
+              range,
+              content,
+              length: content.length
+            };
+          }
+          return l;
+        });
+        showNotification('독서일지가 성공적으로 수정되었습니다.');
+        editingLog = null;
+      } else {
+        // Create new log
+        const newLog = {
+          id: `log-${Date.now()}`,
+          userId: currentUser.id,
+          userName: currentUser.name,
+          userRole: currentUser.role,
+          userNo: currentUser.id,
+          date: getTodayDateString(),
+          title,
+          author,
+          range,
+          content,
+          length: content.length
+        };
+        logs.unshift(newLog);
+        localStorage.removeItem(`${STORAGE_PREFIX}draft_${currentUser.id}`);
+        showNotification('오늘의 독서일지가 정상 등록되었습니다!');
+      }
+
+      localStorage.setItem(`${STORAGE_PREFIX}logs`, JSON.stringify(logs));
+      logForm = { title: '', author: '', range: '', content: '' };
+      navigate('mypage');
+    }
+
+    function editOwnLog(logId) {
+      const log = logs.find(l => l.id === logId);
+      if (!log) return;
+      editingLog = log;
+      navigate('write');
+    }
+
+    function cancelEditingLog() {
+      editingLog = null;
+      logForm = { title: '', author: '', range: '', content: '' };
+      navigate('mypage');
+    }
+
+    function editLogByAdmin(logId) {
+      const log = logs.find(l => l.id === logId);
+      if (!log) return;
+      editingLog = log;
+      navigate('write');
+    }
+
+    function deleteLogByAdmin(logId) {
+      if (!confirm('이 독서일지 기록을 삭제하시겠습니까?')) return;
+      logs = logs.filter(l => l.id !== logId);
+      localStorage.setItem(`${STORAGE_PREFIX}logs`, JSON.stringify(logs));
+      showNotification('일지가 삭제되었습니다.');
+      renderApp();
+    }
+
+    // ----------------------------------------------------------------------
+    // MODAL DIALOG ENGINE
+    // ----------------------------------------------------------------------
+    function openLogDetail(logId) {
+      const log = logs.find(l => l.id === logId);
+      if (!log) return;
+
+      document.getElementById('modal-log-id').innerText = `RECORD ID: ${log.id}`;
+      document.getElementById('modal-user-name').innerText = log.userName;
+      document.getElementById('modal-user-no').innerText = `[${log.userRole === 'student' ? '학생' : '교직원'}] ID: ${log.userNo}`;
+      document.getElementById('modal-date').innerText = log.date;
+      document.getElementById('modal-length').innerText = `총 ${log.length}자 작성`;
+      document.getElementById('modal-book-title').innerText = log.title;
+      document.getElementById('modal-book-author').innerText = `저자: ${log.author} • 읽은 범위: ${log.range}`;
+      document.getElementById('modal-content').innerText = log.content;
+
+      const adminActions = document.getElementById('modal-admin-actions');
+      if (isAdminUnlocked || (currentUser && currentUser.id === log.userId)) {
+        adminActions.innerHTML = `
+          <button onclick="closeModal(); editOwnLog('${log.id}');" class="px-3.5 py-1.5 bg-blue-50 text-blue-600 font-bold text-xs rounded-xl hover:bg-blue-100 transition">수정</button>
+          <button onclick="closeModal(); deleteLogByAdmin('${log.id}');" class="px-3.5 py-1.5 bg-rose-50 text-rose-600 font-bold text-xs rounded-xl hover:bg-rose-100 transition">삭제</button>
+        `;
+      } else {
+        adminActions.innerHTML = '';
+      }
+
+      document.getElementById('detail-modal').classList.remove('hidden');
+    }
+
+    function closeModal() {
+      document.getElementById('detail-modal').classList.add('hidden');
+    }
+
+    // ----------------------------------------------------------------------
+    // LOTTERY ALGORITHM & REPORT EXPORT
+    // ----------------------------------------------------------------------
+    function runLottery() {
+      const candidates = getSurveySubmissions();
+      if (candidates.length === 0) {
+        showNotification('만족도 조사를 제출한 응모 대상자가 없습니다.', 'error');
+        return;
+      }
+      if (prizeItems.length === 0) {
+        showNotification('설정된 경품 상품이 없습니다.', 'error');
+        return;
+      }
+
+      // 가중치 비복원 추출 추첨 알고리즘
+      const ticketPool = [];
+      candidates.forEach(cand => {
+        for (let i = 0; i < cand.tickets; i++) {
+          ticketPool.push(cand);
+        }
+      });
+
+      const winners = [];
+      const winnerUserIds = new Set();
+
+      prizeItems.forEach(prize => {
+        for (let c = 0; c < prize.count; c++) {
+          const availableTickets = ticketPool.filter(t => !winnerUserIds.has(t.userId));
+          if (availableTickets.length === 0) break;
+
+          const randomIndex = Math.floor(Math.random() * availableTickets.length);
+          const winnerCandidate = availableTickets[randomIndex];
+
+          winnerUserIds.add(winnerCandidate.userId);
+          winners.push({
+            prize: prize.name,
+            userId: winnerCandidate.userId,
+            userName: winnerCandidate.userName,
+            userRole: winnerCandidate.userRole,
+            tickets: winnerCandidate.tickets,
+            time: new Date().toLocaleTimeString('ko-KR')
+          });
+        }
+      });
+
+      localStorage.setItem(`${STORAGE_PREFIX}lottery_winners`, JSON.stringify(winners));
+      showNotification('🎉 경품 공정 가중 추첨이 완료되었습니다!');
+      renderApp();
+    }
+
+    function resetLottery() {
+      if (!confirm('추첨 결과를 초기화하고 재추첨하시겠습니까?')) return;
+      localStorage.removeItem(`${STORAGE_PREFIX}lottery_winners`);
+      showNotification('추첨 결과가 리셋되었습니다.');
+      renderApp();
+    }
+
+    function downloadLotteryReport() {
+      const winnersData = localStorage.getItem(`${STORAGE_PREFIX}lottery_winners`);
+      if (!winnersData) return;
+
+      const winners = JSON.parse(winnersData);
+      const wsData = [
+        ['당첨 상품', '당첨자 이름', '학번/사번', '구분', '보유 응모권 수', '추첨 일시']
+      ];
+
+      winners.forEach(w => {
+        wsData.push([w.prize, w.userName, w.userId, w.userRole === 'student' ? '학생' : '교직원', `${w.tickets}장`, w.time]);
+      });
+
+      const wb = XLSX.utils.book_new();
+      const ws = XLSX.utils.aoa_to_sheet(wsData);
+      XLSX.utils.book_append_sheet(wb, ws, "경품당첨자명단");
+      XLSX.writeFile(wb, "2026_독서마라톤_경품당첨자_결과보고서.xlsx");
+    }
+
+    function downloadLogsExcel() {
+      const wsData = [
+        ['작성일자', '작성자', '구분', '학번/사번', '도서명', '저자', '읽은범위', '글자수', '독서일지 내용']
+      ];
+
+      logs.forEach(l => {
+        wsData.push([l.date, l.userName, l.userRole === 'student' ? '학생' : '교직원', l.userNo, l.title, l.author, l.range, l.length, l.content]);
+      });
+
+      const wb = XLSX.utils.book_new();
+      const ws = XLSX.utils.aoa_to_sheet(wsData);
+      XLSX.utils.book_append_sheet(wb, ws, "독서일지_통합DB");
+      XLSX.writeFile(wb, "2026_독서마라톤_전체독서일지.xlsx");
+    }
+
+    // ----------------------------------------------------------------------
+    // VIRTUAL DATABASE IMPORT / EXPORT
+    // ----------------------------------------------------------------------
+    function exportVirtualDb() {
+      const dbData = {
+        users: registeredUsers,
+        logs: logs,
+        prizes: prizeItems,
+        adminPassword: adminPassword,
+        exportTime: new Date().toISOString()
+      };
+
+      const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(dbData, null, 2));
+      const downloadAnchor = document.createElement('a');
+      downloadAnchor.setAttribute("href", dataStr);
+      downloadAnchor.setAttribute("download", `reading_marathon_db_backup_${getTodayDateString()}.json`);
+      document.body.appendChild(downloadAnchor);
+      downloadAnchor.click();
+      downloadAnchor.remove();
+      showNotification('가상 DB 백업 파일이 내보내기 되었습니다.');
+    }
+
+    function importVirtualDb(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = function(event) {
+        try {
+          const imported = JSON.parse(event.target.result);
+          if (imported.users && imported.logs) {
+            registeredUsers = imported.users;
+            logs = imported.logs;
+            if (imported.prizes) prizeItems = imported.prizes;
+            if (imported.adminPassword) adminPassword = imported.adminPassword;
+
+            localStorage.setItem(`${STORAGE_PREFIX}users`, JSON.stringify(registeredUsers));
+            localStorage.setItem(`${STORAGE_PREFIX}logs`, JSON.stringify(logs));
+            localStorage.setItem(`${STORAGE_PREFIX}prize_items`, JSON.stringify(prizeItems));
+            localStorage.setItem(`${STORAGE_PREFIX}admin_password`, adminPassword);
+
+            showNotification('가상 DB 파일이 성공적으로 복원되었습니다.');
+            renderApp();
+          } else {
+            showNotification('올바르지 않은 가상 DB 데이터 형식입니다.', 'error');
+          }
+        } catch (err) {
+          showNotification('파일 읽기 오류가 발생했습니다.', 'error');
+        }
+      };
+      reader.readAsText(file);
+    }
+
+    function resetVirtualDb() {
+      if (!confirm('모든 데이터를 초기 시뮬레이션 상태로 리셋하시겠습니까?')) return;
+      localStorage.clear();
+      location.reload();
+    }
+
+    function changeAdminPassword(e) {
+      e.preventDefault();
+      const newPass = document.getElementById('new-pass-input').value.trim();
+      if (!newPass) return;
+
+      adminPassword = newPass;
+      localStorage.setItem(`${STORAGE_PREFIX}admin_password`, adminPassword);
+      showNotification('관리자 비밀번호가 새로 변경되었습니다.');
+      renderApp();
+    }
+
+    // ----------------------------------------------------------------------
+    // SEARCH & SORT & NOTIFICATION HELPERS
+    // ----------------------------------------------------------------------
+    function setSearchUserKeyword(val) {
+      searchUserKeyword = val;
+      renderApp();
+    }
+
+    function toggleUserSort() {
+      userSortOrder = userSortOrder === 'desc' ? 'asc' : 'desc';
+      renderApp();
+    }
+
+    function setSearchLogKeyword(val) {
+      searchLogKeyword = val;
+      renderApp();
+    }
+
+    function toggleLogSort() {
+      logSortOrder = logSortOrder === 'desc' ? 'asc' : 'desc';
+      renderApp();
+    }
+
+    function showNotification(msg, type = 'info') {
+      const bar = document.getElementById('notification-bar');
+      const text = document.getElementById('notification-text');
+      const icon = document.getElementById('notification-icon');
+
+      text.innerText = msg;
+
+      if (type === 'error') {
+        bar.className = "fixed top-4 right-4 z-50 flex items-center gap-3 px-5 py-4 rounded-2xl shadow-2xl border transition-all transform duration-300 bg-rose-900 text-white border-rose-700";
+        icon.innerHTML = `<i data-lucide="alert-triangle" class="w-5 h-5 text-rose-300"></i>`;
+      } else if (type === 'success') {
+        bar.className = "fixed top-4 right-4 z-50 flex items-center gap-3 px-5 py-4 rounded-2xl shadow-2xl border transition-all transform duration-300 bg-emerald-900 text-white border-emerald-700";
+        icon.innerHTML = `<i data-lucide="check-circle" class="w-5 h-5 text-emerald-300"></i>`;
+      } else {
+        bar.className = "fixed top-4 right-4 z-50 flex items-center gap-3 px-5 py-4 rounded-2xl shadow-2xl border transition-all transform duration-300 bg-slate-900 text-white border-slate-700";
+        icon.innerHTML = `<i data-lucide="info" class="w-5 h-5 text-blue-400"></i>`;
+      }
+
+      lucide.createIcons();
+      bar.classList.remove('hidden', 'translate-y-[-150%]');
+
+      setTimeout(() => {
+        bar.classList.add('translate-y-[-150%]');
+        setTimeout(() => bar.classList.add('hidden'), 300);
+      }, 3000);
+    }
+  </script>
+</body>
+</html>
