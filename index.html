@@ -1,594 +1,955 @@
-import React, { useState, useEffect } from 'react';
-import { 
-  AlertCircle, 
-  Info, 
-  Save, 
-  BookOpen, 
-  CheckCircle2, 
-  FileText, 
-  User, 
-  Calendar,
-  Sparkles,
-  Edit3,
-  XCircle,
-  Cloud,
-  CloudCheck,
-  RefreshCw
-} from 'lucide-react';
-import { initializeApp } from 'firebase/app';
-import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
-import { getFirestore, collection, doc, setDoc, onSnapshot } from 'firebase/firestore';
-
-const firebaseConfig = typeof __firebase_config !== 'undefined' 
-  ? JSON.parse(__firebase_config) 
-  : { apiKey: "demo", authDomain: "demo", projectId: "demo" };
-
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getFirestore(app);
-const appId = typeof __app_id !== 'undefined' ? __app_id : 'marathon-app';
-
-interface UserType {
-  id: string;
-  name: string;
-  role: 'student' | 'staff';
-}
-
-interface MarathonLog {
-  id: string;
-  userId: string;
-  userName: string;
-  userRole: 'student' | 'staff';
-  userNo: string;
-  date: string;
-  title: string;
-  author: string;
-  range: string;
-  content: string;
-  length: number;
-}
-
-interface LogFormState {
-  title: string;
-  author: string;
-  range: string;
-  content: string;
-}
-
-const STORAGE_PREFIX = 'marathon_app_';
-
-export default function App() {
-  const [currentUser, setCurrentUser] = useState<UserType>({
-    id: 'student-2026',
-    name: '김러너',
-    role: 'student'
-  });
-
-  const [fbUser, setFbUser] = useState<FirebaseUser | null>(null);
-  const [isSyncing, setIsSyncing] = useState<boolean>(true);
-  const [activeTab, setActiveTab] = useState<'write' | 'mypage' | 'rules'>('write');
-  const [logs, setLogs] = useState<MarathonLog[]>([]);
-
-  const [editingLog, setEditingLog] = useState<MarathonLog | null>(null);
-  const [logForm, setLogForm] = useState<LogFormState>({
-    title: '',
-    author: '',
-    range: '',
-    content: ''
-  });
-
-  const [notification, setNotification] = useState<{ message: string; type: 'success' | 'error' | 'info' } | null>(null);
-  const [draftStatus, setDraftStatus] = useState<string>('');
-
-  useEffect(() => {
-    const initAuth = async () => {
-      try {
-        if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-          await signInWithCustomToken(auth, __initial_auth_token);
-        } else {
-          await signInAnonymously(auth);
-        }
-      } catch (err) {
-        console.error("Auth initialization error:", err);
-      }
-    };
-    initAuth();
-
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      setFbUser(user);
-    });
-
-    return () => unsubscribe();
-  }, []);
-
-  useEffect(() => {
-    if (!fbUser) return;
-
-    setIsSyncing(true);
-    const logsCollection = collection(db, 'artifacts', appId, 'public', 'data', 'logs');
+<!DOCTYPE html>
+<html lang="ko" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>꽃들에게 희망을 - 고등학교 인문토론캠프</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
-    const unsubscribe = onSnapshot(
-      logsCollection,
-      (snapshot) => {
-        const cloudLogs: MarathonLog[] = [];
-        snapshot.forEach((docSnap) => {
-          const data = docSnap.data();
-          cloudLogs.push({
-            id: docSnap.id,
-            userId: data.userId || '',
-            userName: data.userName || '',
-            userRole: data.userRole || 'student',
-            userNo: data.userNo || '',
-            date: data.date || '',
-            title: data.title || '',
-            author: data.author || '',
-            range: data.range || '',
-            content: data.content || '',
-            length: data.length || 0
-          });
-        });
-        
-        // 내림차순 정렬
-        cloudLogs.sort((a, b) => b.id.localeCompare(a.id));
-        setLogs(cloudLogs);
-        setIsSyncing(false);
-      },
-      (error) => {
-        console.error("Firestore onSnapshot error:", error);
-        setIsSyncing(false);
-      }
-    );
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        sunflower: {
+                            50: '#fffbe8',
+                            100: '#fff3ad',
+                            400: '#fbbf24',
+                            500: '#f59e0b',
+                            600: '#d97706',
+                            700: '#b45309'
+                        },
+                        leaf: {
+                            50: '#ecfdf5',
+                            100: '#d1fae5',
+                            400: '#34d399',
+                            500: '#10b981',
+                            600: '#059669',
+                            700: '#047857'
+                        },
+                        charcoal: {
+                            800: '#1f2937',
+                            900: '#111827'
+                        },
+                        cream: '#fef3c7'
+                    },
+                    fontFamily: {
+                        sans: ['Noto Sans KR', 'sans-serif'],
+                    },
+                    keyframes: {
+                        float: {
+                            '0%, 100%': { transform: 'translateY(0px) rotate(0deg)' },
+                            '50%': { transform: 'translateY(-12px) rotate(2deg)' },
+                        },
+                        flutter: {
+                            '0%, 100%': { transform: 'scaleX(1)' },
+                            '50%': { transform: 'scaleX(0.7)' }
+                        },
+                        pulseGlow: {
+                            '0%, 100%': { boxShadow: '0 0 15px rgba(245, 158, 11, 0.4)' },
+                            '50%': { boxShadow: '0 0 25px rgba(245, 158, 11, 0.8)' }
+                        },
+                        riseUp: {
+                            '0%': { opacity: '0', transform: 'translateY(30px) scale(0.9)' },
+                            '100%': { opacity: '1', transform: 'translateY(0) scale(1)' }
+                        }
+                    },
+                    animation: {
+                        'float-slow': 'float 6s ease-in-out infinite',
+                        'flutter': 'flutter 0.4s ease-in-out infinite alternate',
+                        'pulse-glow': 'pulseGlow 2s infinite',
+                        'rise-up': 'riseUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards'
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'Noto Sans KR', sans-serif;
+            background-color: #fdfbf7;
+            color: #1f2937;
+            overflow-x: hidden;
+        }
+        .bg-grid-pattern {
+            background-image: radial-gradient(#f59e0b 0.75px, transparent 0.75px);
+            background-size: 24px 24px;
+        }
+        .glass-card {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(245, 158, 11, 0.2);
+        }
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #fef3c7;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #f59e0b;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body class="bg-grid-pattern min-h-screen flex flex-col justify-between selection:bg-sunflower-400 selection:text-white">
 
-    return () => unsubscribe();
-  }, [fbUser]);
-
-  const showNotification = (message: string, type: 'success' | 'error' | 'info' = 'info') => {
-    setNotification({ message, type });
-    setTimeout(() => {
-      setNotification(null);
-    }, 4000);
-  };
-
-  // 오늘 날짜 얻기 (테스트/기준일자 2026-08-02)
-  const getTodayDateString = () => {
-    return '2026.08.02';
-  };
-
-  // 대회 운영 기간 검증 (2026.08.02 ~ 2026.08.28)
-  const isMarathonPeriod = () => {
-    return true; // 대회 기간 내로 활성화
-  };
-
-  const handleSaveLog = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!currentUser) return;
-
-    if (!isMarathonPeriod()) {
-      showNotification('작성 기간 제한 상태입니다. (대회 운영 기간: 8/2 ~ 8/28)', 'error');
-      return;
-    }
-
-    const todayStr = getTodayDateString();
-    const title = logForm.title.trim();
-    const author = logForm.author.trim();
-    const range = logForm.range.trim();
-    const content = logForm.content.trim();
-
-    if (!title || !author || !range || !content) {
-      showNotification('모든 필수 값을 입력해주세요.', 'error');
-      return;
-    }
-
-    if (content.length < 50) {
-      showNotification('최소 50자 이상 감상문을 기재해야 저장이 완료됩니다.', 'error');
-      return;
-    }
-
-    const logId = editingLog ? editingLog.id : `log-${Date.now()}`;
-    const logData: MarathonLog = {
-      id: logId,
-      userId: currentUser.id,
-      userName: currentUser.name,
-      userRole: currentUser.role,
-      userNo: currentUser.id,
-      date: editingLog ? editingLog.date : todayStr,
-      title,
-      author,
-      range,
-      content,
-      length: content.length
-    };
-
-    if (fbUser) {
-      const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'logs', logId);
-      setDoc(docRef, logData, { merge: true })
-        .then(() => {
-          showNotification(editingLog ? '독서일지가 수정되었습니다.' : '오늘의 독서일지가 클라우드에 연동 저장되었습니다!', 'success');
-        })
-        .catch((err) => {
-          console.error("Cloud save error:", err);
-          showNotification('클라우드 저장 중 오류가 발생했습니다.', 'error');
-        });
-    }
-
-    setLogForm({ title: '', author: '', range: '', content: '' });
-    setEditingLog(null);
-    setActiveTab('mypage');
-  };
-
-  const startEditLog = (log: MarathonLog) => {
-    setEditingLog(log);
-    setLogForm({
-      title: log.title,
-      author: log.author,
-      range: log.range,
-      content: log.content
-    });
-    setActiveTab('write');
-  };
-
-  const cancelEdit = () => {
-    setEditingLog(null);
-    setLogForm({ title: '', author: '', range: '', content: '' });
-  };
-
-  return (
-    <div className="min-h-screen bg-slate-100 text-slate-800 font-sans p-4 sm:p-8">
-      {/* Toast Notification */}
-      {notification && (
-        <div
-          className={`fixed top-5 right-5 z-50 px-5 py-3 rounded-2xl shadow-xl flex items-center gap-3 text-sm font-bold text-white transition-all animate-bounce ${
-            notification.type === 'success'
-              ? 'bg-emerald-600'
-              : notification.type === 'error'
-              ? 'bg-rose-600'
-              : 'bg-blue-600'
-          }`}
-        >
-          {notification.type === 'success' && <CheckCircle2 className="w-5 h-5" />}
-          {notification.type === 'error' && <AlertCircle className="w-5 h-5" />}
-          {notification.type === 'info' && <Info className="w-5 h-5" />}
-          <span>{notification.message}</span>
-        </div>
-      )}
-
-      {}
-      <header className="max-w-4xl mx-auto mb-8 bg-white rounded-3xl p-6 shadow-sm border border-slate-200/80 flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div className="flex items-center gap-3">
-          <div className="p-3 bg-blue-600 text-white rounded-2xl shadow-md shadow-blue-500/20">
-            <BookOpen className="w-7 h-7" />
-          </div>
-          <div>
-            <div className="flex items-center gap-2">
-              <h1 className="text-2xl font-black text-slate-900 tracking-tight">2026 독서 마라톤</h1>
-              {isSyncing ? (
-                <span className="flex items-center gap-1 text-[11px] font-bold bg-amber-50 text-amber-600 px-2.5 py-0.5 rounded-full border border-amber-200">
-                  <RefreshCw className="w-3 h-3 animate-spin" /> 동기화 중
+    <!-- Navigation Bar -->
+    <nav class="sticky top-0 z-40 glass-card border-b border-amber-200/60 shadow-sm transition-all duration-300">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <span class="p-2 bg-amber-500 text-white rounded-xl shadow-md flex items-center justify-center">
+                    <i class="fa-solid font-bold fa-butterfly text-lg"></i>
                 </span>
-              ) : (
-                <span className="flex items-center gap-1 text-[11px] font-bold bg-emerald-50 text-emerald-600 px-2.5 py-0.5 rounded-full border border-emerald-200">
-                  <Cloud className="w-3 h-3" /> 모바일/PC 동기화 중
-                </span>
-              )}
+                <div>
+                    <h1 class="font-black text-lg sm:text-xl text-charcoal-800 leading-tight">꽃들에게 희망을</h1>
+                    <p class="text-xs text-amber-700 font-medium hidden sm:block">고등학교 인문토론캠프</p>
+                </div>
             </div>
-            <p className="text-xs text-slate-500 font-medium">운영 기간: 2026.08.02 ~ 2026.08.28</p>
-          </div>
+
+            <div class="hidden md:flex items-center space-x-6 text-sm font-semibold text-gray-700">
+                <a href="#overview" class="hover:text-amber-600 transition-colors">캠프 안내</a>
+                <a href="#metaphor" class="hover:text-amber-600 transition-colors">1차시: 메타포 & 토론</a>
+                <a href="#balance" class="hover:text-amber-600 transition-colors">2차시: 밸런스 & 선언문</a>
+                <a href="#guestbook" class="hover:text-amber-600 transition-colors">실시간 소감</a>
+            </div>
+
+            <button onclick="openWorksheetModal()" class="flex items-center space-x-2 bg-gradient-to-r from-leaf-500 to-leaf-600 hover:from-leaf-600 hover:to-leaf-700 text-white px-4 py-2 rounded-xl text-xs sm:text-sm font-bold shadow-md hover:shadow-lg transition-all transform hover:-translate-y-0.5">
+                <i class="fa-solid fa-file-signature"></i>
+                <span>사전 활동지 작성</span>
+            </button>
+        </div>
+    </nav>
+
+    <!-- Hero Header -->
+    <header class="relative overflow-hidden bg-gradient-to-b from-amber-100/80 via-amber-50/50 to-transparent pt-12 pb-16 px-4 sm:px-6 lg:px-8">
+        <!-- Floating decorative butterflies -->
+        <div class="absolute top-8 left-10 text-amber-400/40 text-4xl animate-float-slow pointer-events-none">
+            <i class="fa-solid fa-butterfly"></i>
+        </div>
+        <div class="absolute bottom-6 right-12 text-emerald-400/30 text-5xl animate-float-slow pointer-events-none" style="animation-delay: 2s;">
+            <i class="fa-solid fa-seedling"></i>
         </div>
 
-        <nav className="flex gap-2 bg-slate-100 p-1.5 rounded-2xl">
-          <button
-            onClick={() => setActiveTab('write')}
-            className={`px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all flex items-center gap-2 ${
-              activeTab === 'write' ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-600 hover:text-slate-900'
-            }`}
-          >
-            <Edit3 className="w-4 h-4" />
-            일지 작성
-          </button>
-          <button
-            onClick={() => setActiveTab('mypage')}
-            className={`px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all flex items-center gap-2 ${
-              activeTab === 'mypage' ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-600 hover:text-slate-900'
-            }`}
-          >
-            <FileText className="w-4 h-4" />
-            나의 기록 ({logs.filter(l => l.userId === currentUser.id).length})
-          </button>
-          <button
-            onClick={() => setActiveTab('rules')}
-            className={`px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all flex items-center gap-2 ${
-              activeTab === 'rules' ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-600 hover:text-slate-900'
-            }`}
-          >
-            <Info className="w-4 h-4" />
-            참여 규칙
-          </button>
-        </nav>
-      </header>
+        <div class="max-w-5xl mx-auto text-center relative z-10">
+            <span class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs sm:text-sm font-bold bg-amber-100 text-amber-800 border border-amber-300 shadow-sm mb-4">
+                <i class="fa-solid fa-book-open text-amber-600"></i>
+                Trina Paulus 《Hope for the Flowers》
+            </span>
 
-      {}
-      <main className="max-w-4xl mx-auto space-y-6">
-        {/* TAB: RULES */}
-        {activeTab === 'rules' && (
-          <div className="bg-white rounded-3xl p-6 sm:p-8 space-y-6 border border-slate-200/80 shadow-sm">
-            <h4 className="font-bold text-slate-800 text-lg border-b pb-3 flex items-center gap-2">
-              <Info className="w-5 h-5 text-blue-600" />대회 참여 규칙 및 방법
-            </h4>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="space-y-3 bg-slate-50 p-4 rounded-2xl border border-slate-100">
-                <h5 className="font-bold text-slate-700 text-sm">참여 방법</h5>
-                <ul className="space-y-2 text-xs sm:text-sm text-slate-600 list-disc list-outside pl-5">
-                  <li>매일 마라톤 사이트에 로그인합니다.</li>
-                  <li>독서 후 [독서일지 작성] 메뉴에서 기록합니다.</li>
-                  <li>느낀 점은 <strong className="text-blue-600">최소 50자 이상</strong> 적어야 제출 가능합니다.</li>
-                </ul>
-              </div>
-              <div className="space-y-3 bg-slate-50 p-4 rounded-2xl border border-slate-100">
-                <h5 className="font-bold text-slate-700 text-sm">기본 규칙</h5>
-                <ul className="space-y-2 text-xs sm:text-sm text-slate-600 list-disc list-outside pl-5">
-                  <li>일지는 하루에 한 번만 작성 가능합니다.</li>
-                  <li>같은 책을 며칠 동안 나눠 읽고 작성해도 됩니다.</li>
-                  <li>PC와 모바일 어디서나 작성한 데이터가 실시간 연동됩니다.</li>
-                </ul>
-              </div>
-            </div>
-          </div>
-        )}
+            <h1 class="text-3xl sm:text-5xl lg:text-6xl font-black text-charcoal-800 tracking-tight leading-tight mb-4">
+                애벌레의 탑을 넘어,<br class="sm:hidden">
+                <span class="text-transparent bg-clip-text bg-gradient-to-r from-amber-600 via-amber-500 to-emerald-600">
+                    나만의 날개를 펼쳐라!
+                </span>
+            </h1>
 
-        {/* TAB: WRITE FORM */}
-        {currentUser && activeTab === 'write' && (
-          <div className="max-w-3xl mx-auto">
-            <div className="bg-white rounded-3xl shadow-sm border border-slate-200/80 overflow-hidden">
-              <div className="p-6 sm:p-8 border-b border-slate-100 bg-slate-50/50 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                <div>
-                  <h2 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
-                    {editingLog ? '독서일지 수정하기' : '오늘의 독서일지 작성'}
-                  </h2>
-                  <p className="text-xs text-slate-500 mt-1">
-                    오늘 읽은 범위와 깨달은 내용을 꼼꼼하게 남겨주세요. (클라우드 실시간 연동 중)
-                  </p>
-                </div>
-                {draftStatus && (
-                  <div className="text-xs text-emerald-600 bg-emerald-50 px-3 py-1.5 rounded-full border border-emerald-100 font-medium">
-                    {draftStatus}
-                  </div>
-                )}
-              </div>
+            <p class="text-base sm:text-lg text-gray-600 max-w-2xl mx-auto mb-8 font-medium">
+                우리는 무작정 위로만 오르고 있는 것은 아닐까요? <br class="hidden sm:inline">
+                애벌레 기둥에서의 무한 경쟁을 돌아보고, 참된 나만의 고치를 틀어 날아오를 준비를 시작합니다.
+            </p>
 
-              {!isMarathonPeriod() && (
-                <div className="m-6 p-4 bg-amber-50 border border-amber-200 text-amber-800 rounded-2xl flex gap-3 text-sm">
-                  <AlertCircle className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
-                  <div>
-                    <strong className="font-bold">독서 일지 기록 제한 상태입니다.</strong>
-                    <p className="text-xs mt-1 text-amber-700">
-                      대회 운영 기간(2026.08.02 ~ 08.28)에만 새 일지를 작성 또는 수정할 수 있습니다.
-                    </p>
-                  </div>
-                </div>
-              )}
-
-              <form onSubmit={handleSaveLog} className="p-6 sm:p-8 space-y-6">
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                  <div className="bg-slate-50 p-4 rounded-xl border border-slate-100">
-                    <span className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">
-                      기록일자 (자동)
-                    </span>
-                    <p className="text-sm font-bold text-slate-700 font-mono flex items-center gap-1.5">
-                      <Calendar className="w-4 h-4 text-blue-600" />
-                      {editingLog ? editingLog.date : getTodayDateString()}
-                    </p>
-                  </div>
-                  <div className="bg-slate-50 p-4 rounded-xl border border-slate-100">
-                    <span className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">
-                      작성자
-                    </span>
-                    <p className="text-sm font-bold text-slate-700 flex items-center gap-1.5">
-                      <User className="w-4 h-4 text-blue-600" />
-                      {currentUser.name} ({currentUser.role === 'student' ? '학생' : '교직원'})
-                    </p>
-                  </div>
-                  <div className="bg-slate-50 p-4 rounded-xl border border-slate-100">
-                    <span className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">
-                      오늘 작성 여부
-                    </span>
-                    <p className="text-sm font-bold text-slate-700">
-                      {logs.filter(l => l.userId === currentUser.id && l.date === getTodayDateString()).length > 0 
-                        ? `${logs.filter(l => l.userId === currentUser.id && l.date === getTodayDateString()).length}회 작성 완료` 
-                        : '미작성 (제출 가능)'}
-                    </p>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                  <div>
-                    <label htmlFor="book-title" className="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">
-                      책 제목 <span className="text-rose-500">*</span>
-                    </label>
-                    <input
-                      id="book-title"
-                      type="text"
-                      required
-                      disabled={!isMarathonPeriod()}
-                      placeholder="예: 데미안"
-                      className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-sm font-medium disabled:bg-slate-100 transition"
-                      value={logForm.title}
-                      onChange={(e) => setLogForm(prev => ({ ...prev, title: e.target.value }))}
-                    />
-                  </div>
-                  <div>
-                    <label htmlFor="book-author" className="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">
-                      저자 <span className="text-rose-500">*</span>
-                    </label>
-                    <input
-                      id="book-author"
-                      type="text"
-                      required
-                      disabled={!isMarathonPeriod()}
-                      placeholder="예: 헤르만 헤세"
-                      className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-sm font-medium disabled:bg-slate-100 transition"
-                      value={logForm.author}
-                      onChange={(e) => setLogForm(prev => ({ ...prev, author: e.target.value }))}
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label htmlFor="book-range" className="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">
-                    읽은 범위 <span className="text-rose-500">*</span>
-                  </label>
-                  <input
-                    id="book-range"
-                    type="text"
-                    required
-                    disabled={!isMarathonPeriod()}
-                    placeholder="예: 1~50쪽 또는 1장 전체"
-                    className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-sm font-medium disabled:bg-slate-100 transition"
-                    value={logForm.range}
-                    onChange={(e) => setLogForm(prev => ({ ...prev, range: e.target.value }))}
-                  />
-                </div>
-
-                <div>
-                  <div className="flex justify-between items-center mb-2">
-                    <label htmlFor="content-textarea" className="block text-xs font-bold text-slate-600 uppercase tracking-wider">
-                      오늘 읽은 내용과 느낀 점 <span className="text-rose-500">*</span>
-                    </label>
-                    <span
-                      className={`text-xs font-bold px-2.5 py-1 rounded-full transition-all ${
-                        logForm.content.length >= 50 ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-rose-50 text-rose-600 border border-rose-200'
-                      }`}
-                    >
-                      글자 수: {logForm.content.length} / 최소 50자
-                    </span>
-                  </div>
-                  <textarea
-                    id="content-textarea"
-                    required
-                    disabled={!isMarathonPeriod()}
-                    placeholder="도서를 읽은 후 자유롭게 감상을 남겨 보세요. (최소 50글자 이상 기재 필수)"
-                    rows={8}
-                    className="w-full p-4 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-sm font-medium leading-relaxed disabled:bg-slate-100 transition"
-                    value={logForm.content}
-                    onChange={(e) => {
-                      const val = e.target.value;
-                      setLogForm(prev => ({ ...prev, content: val }));
-                    }}
-                    onPaste={(e) => {
-                      e.preventDefault();
-                      showNotification('공정한 대회를 위해 붙여넣기(Paste)가 금지되어 있습니다. 직접 타이핑하여 작성해 주세요!', 'error');
-                    }}
-                    onContextMenu={(e) => {
-                      e.preventDefault();
-                      showNotification('공정한 독서 마라톤 운영을 위해 우클릭 단축 메뉴가 제한됩니다.', 'error');
-                    }}
-                    onKeyDown={(e) => {
-                      if ((e.ctrlKey || e.metaKey) && (e.key === 'v' || e.key === 'V')) {
-                        e.preventDefault();
-                        showNotification('공정한 대회를 위해 붙여넣기 단축키가 금지되어 있습니다. 직접 작성해 주세요!', 'error');
-                      }
-                    }}
-                  />
-                  
-                  {logForm.content.length > 0 && logForm.content.length < 50 && (
-                    <p className="text-xs text-rose-500 mt-2 flex items-center gap-1.5 font-semibold">
-                      <AlertCircle className="w-4 h-4" />
-                      독서일지는 최소 50자 이상 기재해야 저장됩니다. (부족한 글자 수: {50 - logForm.content.length}자)
-                    </p>
-                  )}
-                </div>
-
-                <div className="pt-4 flex flex-col sm:flex-row gap-3">
-                  <button
-                    type="submit"
-                    disabled={!isMarathonPeriod()}
-                    className={`flex-1 py-4 text-white rounded-xl font-bold text-base transition-all flex items-center justify-center gap-2 ${
-                      !isMarathonPeriod()
-                        ? 'bg-slate-300 cursor-not-allowed'
-                        : 'bg-blue-600 hover:bg-blue-700 shadow-lg shadow-blue-600/20 active:scale-[0.99]'
-                    }`}
-                  >
-                    <Save className="w-5 h-5" />
-                    {editingLog ? '수정 내용 저장하기' : '오늘의 일지 등록하기'}
-                  </button>
-                  {editingLog && (
-                    <button
-                      type="button"
-                      onClick={cancelEdit}
-                      className="px-6 py-4 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl transition"
-                    >
-                      수정 취소
-                    </button>
-                  )}
-                </div>
-              </form>
-            </div>
-          </div>
-        )}
-
-        {/* TAB: MY PAGE */}
-        {activeTab === 'mypage' && (
-          <div className="bg-white rounded-3xl p-6 sm:p-8 space-y-6 border border-slate-200/80 shadow-sm">
-            <div className="flex justify-between items-center border-b pb-4">
-              <h3 className="text-lg font-bold text-slate-800 flex items-center gap-2">
-                <FileText className="w-5 h-5 text-blue-600" />
-                내가 작성한 독서일지 목록
-              </h3>
-              <span className="text-xs font-semibold bg-blue-50 text-blue-600 px-3 py-1 rounded-full border border-blue-100">
-                총 {logs.filter(l => l.userId === currentUser.id).length}건 저장됨
-              </span>
-            </div>
-
-            {logs.filter(l => l.userId === currentUser.id).length === 0 ? (
-              <div className="text-center py-12 text-slate-400 space-y-3">
-                <BookOpen className="w-12 h-12 mx-auto stroke-1 text-slate-300" />
-                <p className="text-sm">아직 작성한 독서일지가 없습니다.</p>
-                <button
-                  onClick={() => setActiveTab('write')}
-                  className="px-4 py-2 bg-blue-600 text-white rounded-xl text-xs font-bold hover:bg-blue-700 transition"
-                >
-                  첫 독서일지 작성하러 가기
-                </button>
-              </div>
-            ) : (
-              <div className="space-y-4">
-                {logs
-                  .filter(l => l.userId === currentUser.id)
-                  .map((log) => (
-                    <div key={log.id} className="p-5 bg-slate-50 rounded-2xl border border-slate-200/60 hover:border-blue-200 transition space-y-3">
-                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-200/50 pb-3">
-                        <div className="flex items-center gap-2">
-                          <span className="px-2.5 py-1 bg-blue-100 text-blue-700 rounded-lg text-xs font-bold font-mono">
-                            {log.date}
-                          </span>
-                          <h4 className="font-bold text-slate-900 text-base">{log.title}</h4>
-                          <span className="text-xs text-slate-500 font-medium">({log.author})</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <span className="text-xs bg-slate-200/70 text-slate-600 px-2.5 py-1 rounded-md font-medium">
-                            범위: {log.range}
-                          </span>
-                          <button
-                            onClick={() => startEditLog(log)}
-                            className="p-1.5 text-slate-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition"
-                            title="수정하기"
-                          >
-                            <Edit3 className="w-4 h-4" />
-                          </button>
-                        </div>
-                      </div>
-                      <p className="text-xs sm:text-sm text-slate-700 leading-relaxed whitespace-pre-wrap">
-                        {log.content}
-                      </p>
-                      <div className="text-right text-[11px] text-slate-400">
-                        글자 수: {log.length}자
-                      </div>
+            <!-- Dynamic Timer Component -->
+            <div class="max-w-xl mx-auto bg-white/90 rounded-2xl shadow-xl p-4 sm:p-6 border border-amber-200">
+                <div class="flex items-center justify-between border-b border-gray-100 pb-3 mb-4">
+                    <div class="flex items-center space-x-2">
+                        <span id="timerSessionBadge" class="px-2.5 py-1 rounded-md text-xs font-bold bg-amber-500 text-white">1차시 진행 중</span>
+                        <span id="timerTitle" class="text-xs sm:text-sm font-bold text-gray-700">경쟁의 기둥을 묻다 (50분)</span>
                     </div>
-                  ))}
-              </div>
-            )}
-          </div>
-        )}
-      </main>
+                    <div class="flex space-x-1">
+                        <button onclick="switchSession(1)" id="btnSession1" class="px-2 py-1 text-xs rounded font-medium bg-amber-100 text-amber-800 hover:bg-amber-200">1차시</button>
+                        <button onclick="switchSession(2)" id="btnSession2" class="px-2 py-1 text-xs rounded font-medium bg-gray-100 text-gray-600 hover:bg-gray-200">2차시</button>
+                    </div>
+                </div>
+
+                <div class="flex items-center justify-center space-x-4">
+                    <div class="text-center">
+                        <div id="timerMinutes" class="text-4xl sm:text-6xl font-black font-mono text-amber-600 tracking-tight">50</div>
+                        <span class="text-xs font-semibold text-gray-400 uppercase">Minutes</span>
+                    </div>
+                    <span class="text-3xl sm:text-5xl font-black text-amber-300 mb-4">:</span>
+                    <div class="text-center">
+                        <div id="timerSeconds" class="text-4xl sm:text-6xl font-black font-mono text-amber-600 tracking-tight">00</div>
+                        <span class="text-xs font-semibold text-gray-400 uppercase">Seconds</span>
+                    </div>
+                </div>
+
+                <div class="flex justify-center items-center space-x-3 mt-5">
+                    <button id="btnTimerStart" onclick="toggleTimer()" class="flex items-center space-x-2 bg-amber-500 hover:bg-amber-600 text-white px-5 py-2.5 rounded-xl font-bold text-sm shadow-md transition-all active:scale-95">
+                        <i id="timerIcon" class="fa-solid fa-play"></i>
+                        <span id="timerBtnText">타이머 시작</span>
+                    </button>
+                    <button onclick="resetTimer()" class="flex items-center space-x-1 bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2.5 rounded-xl font-bold text-sm transition-all">
+                        <i class="fa-solid fa-rotate-left"></i>
+                        <span>초기화</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content Container -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-20 py-8">
+
+        <!-- SECTION 1: Camp Overview & Timeline -->
+        <section id="overview" class="scroll-mt-24">
+            <div class="text-center max-w-2xl mx-auto mb-10">
+                <h2 class="text-xs font-bold text-amber-600 uppercase tracking-widest mb-1">Camp Roadmap</h2>
+                <h3 class="text-2xl sm:text-3xl font-bold text-gray-900">2차시 토론 캠프 프로그램</h3>
+                <p class="text-sm text-gray-500 mt-2">100분 동안 펼쳐지는 생각의 깊이를 더하는 여정입니다.</p>
+            </div>
+
+            <div class="grid md:grid-cols-2 gap-6 lg:gap-8">
+                <!-- Timeline Card 1 -->
+                <div class="bg-white rounded-3xl p-6 sm:p-8 shadow-md border border-amber-100 hover:shadow-xl transition-all duration-300 relative overflow-hidden group">
+                    <div class="absolute top-0 right-0 w-32 h-32 bg-amber-50 rounded-bl-full -z-0 group-hover:scale-110 transition-transform"></div>
+                    <div class="relative z-10">
+                        <div class="flex justify-between items-start mb-4">
+                            <span class="px-3 py-1 bg-amber-500 text-white text-xs font-black rounded-full shadow-sm">1차시 | 50 min</span>
+                            <i class="fa-solid fa-layer-group text-3xl text-amber-400"></i>
+                        </div>
+                        <h4 class="text-xl font-bold text-gray-900 mb-2">경쟁의 기둥을 묻다</h4>
+                        <p class="text-sm text-gray-600 mb-4 leading-relaxed">
+                            상징에 담긴 내포적 의미를 파악하고, 목적 없이 위로만 향하는 '애벌레 기둥'의 무한 경쟁 시스템 속 의미를 분석합니다.
+                        </p>
+                        <ul class="text-xs text-gray-500 space-y-2 border-t border-gray-100 pt-4">
+                            <li class="flex items-center"><i class="fa-solid fa-check text-amber-500 mr-2"></i>작품 속 핵심 상징(기둥, 고치, 나비) 재정의</li>
+                            <li class="flex items-center"><i class="fa-solid fa-check text-amber-500 mr-2"></i>[토론] 목적 없는 무한 경쟁도 가치가 있는가?</li>
+                            <li class="flex items-center"><i class="fa-solid fa-check text-amber-500 mr-2"></i>실시간 찬반 투표 및 입체적 근거 작성</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Timeline Card 2 -->
+                <div class="bg-white rounded-3xl p-6 sm:p-8 shadow-md border border-emerald-100 hover:shadow-xl transition-all duration-300 relative overflow-hidden group">
+                    <div class="absolute top-0 right-0 w-32 h-32 bg-emerald-50 rounded-bl-full -z-0 group-hover:scale-110 transition-transform"></div>
+                    <div class="relative z-10">
+                        <div class="flex justify-between items-start mb-4">
+                            <span class="px-3 py-1 bg-emerald-500 text-white text-xs font-black rounded-full shadow-sm">2차시 | 50 min</span>
+                            <i class="fa-solid fa-feather-pointed text-3xl text-emerald-400"></i>
+                        </div>
+                        <h4 class="text-xl font-bold text-gray-900 mb-2">나만의 고치를 틀다</h4>
+                        <p class="text-sm text-gray-600 mb-4 leading-relaxed">
+                            호랑과 노랑 애벌레의 서로 다른 선택을 통해 삶의 방향성을 성찰하고, 내가 벗어날 허물과 새로 펼칠 날개를 선언합니다.
+                        </p>
+                        <ul class="text-xs text-gray-500 space-y-2 border-t border-gray-100 pt-4">
+                            <li class="flex items-center"><i class="fa-solid fa-check text-emerald-500 mr-2"></i>[가치관 밸런스 게임] 내부 개혁 vs 외부 변혁</li>
+                            <li class="flex items-center"><i class="fa-solid fa-check text-emerald-500 mr-2"></i>디지털 '나만의 고치 선언문' 작성</li>
+                            <li class="flex items-center"><i class="fa-solid fa-check text-emerald-500 mr-2"></i>실시간 날개 갤러리 공유 & 종합 소감</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Worksheet Banner -->
+            <div class="mt-8 bg-gradient-to-r from-amber-500 via-amber-600 to-emerald-600 rounded-2xl p-6 text-white shadow-lg flex flex-col sm:flex-row items-center justify-between gap-4">
+                <div class="flex items-center space-x-4">
+                    <div class="w-12 h-12 bg-white/20 rounded-2xl flex items-center justify-center shrink-0 text-xl">
+                        <i class="fa-solid fa-clipboard-check"></i>
+                    </div>
+                    <div>
+                        <h4 class="font-bold text-base sm:text-lg">사전 읽기 활동지를 준비하셨나요?</h4>
+                        <p class="text-xs text-amber-100">책을 읽고 정리한 나만의 생각과 인터뷰 질문을 입력하면 캠프 토론에 바로 반영됩니다.</p>
+                    </div>
+                </div>
+                <button onclick="openWorksheetModal()" class="w-full sm:w-auto px-5 py-2.5 bg-white text-amber-700 hover:bg-amber-50 font-bold rounded-xl text-sm transition-all shadow-md shrink-0">
+                    활동지 열기 / 확인
+                </button>
+            </div>
+        </section>
+
+        <!-- SECTION 2: 1차시 메타포 갤러리 & 입체 토론 -->
+        <section id="metaphor" class="scroll-mt-24">
+            <div class="text-center max-w-2xl mx-auto mb-10">
+                <span class="px-3 py-1 bg-amber-100 text-amber-800 text-xs font-bold rounded-full">1차시 핵심 활동</span>
+                <h3 class="text-2xl sm:text-3xl font-bold text-gray-900 mt-2">메타포 갤러리 & 입체 토론</h3>
+                <p class="text-sm text-gray-500 mt-1">상징을 정밀하게 분석하고, 경쟁의 의미에 대해 치열하게 토론해보세요.</p>
+            </div>
+
+            <!-- Metaphor Cards Grid -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-12">
+                <!-- Card 1 -->
+                <div onclick="openSymbolModal('애벌레 기둥')" class="bg-white rounded-2xl p-5 border border-amber-200/80 shadow-sm hover:shadow-md hover:-translate-y-1 transition-all cursor-pointer group">
+                    <div class="w-10 h-10 rounded-xl bg-amber-100 text-amber-600 flex items-center justify-center text-xl mb-3 group-hover:scale-110 transition-transform">
+                        <i class="fa-solid fa-cubes"></i>
+                    </div>
+                    <h4 class="font-bold text-gray-800 mb-1 flex items-center justify-between">
+                        <span>애벌레 기둥</span>
+                        <i class="fa-solid fa-plus text-xs text-amber-400"></i>
+                    </h4>
+                    <p class="text-xs text-gray-500 mb-3">무조건 꼭대기로 오르는 무한 경쟁 구조</p>
+                    <div id="symbol-count-1" class="text-[11px] font-semibold text-amber-700 bg-amber-50 px-2.5 py-1 rounded-md inline-block">
+                        3개의 학생 해석 보기
+                    </div>
+                </div>
+
+                <!-- Card 2 -->
+                <div onclick="openSymbolModal('노랑 애벌레')" class="bg-white rounded-2xl p-5 border border-amber-200/80 shadow-sm hover:shadow-md hover:-translate-y-1 transition-all cursor-pointer group">
+                    <div class="w-10 h-10 rounded-xl bg-yellow-100 text-yellow-600 flex items-center justify-center text-xl mb-3 group-hover:scale-110 transition-transform">
+                        <i class="fa-solid fa-worm"></i>
+                    </div>
+                    <h4 class="font-bold text-gray-800 mb-1 flex items-center justify-between">
+                        <span>노랑 애벌레</span>
+                        <i class="fa-solid fa-plus text-xs text-amber-400"></i>
+                    </h4>
+                    <p class="text-xs text-gray-500 mb-3">내면의 소리와 사랑, 참된 가치를 묻는 존재</p>
+                    <div id="symbol-count-2" class="text-[11px] font-semibold text-amber-700 bg-amber-50 px-2.5 py-1 rounded-md inline-block">
+                        2개의 학생 해석 보기
+                    </div>
+                </div>
+
+                <!-- Card 3 -->
+                <div onclick="openSymbolModal('고치')" class="bg-white rounded-2xl p-5 border border-amber-200/80 shadow-sm hover:shadow-md hover:-translate-y-1 transition-all cursor-pointer group">
+                    <div class="w-10 h-10 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center text-xl mb-3 group-hover:scale-110 transition-transform">
+                        <i class="fa-solid fa-egg"></i>
+                    </div>
+                    <h4 class="font-bold text-gray-800 mb-1 flex items-center justify-between">
+                        <span>고치 (Cocoon)</span>
+                        <i class="fa-solid fa-plus text-xs text-amber-400"></i>
+                    </h4>
+                    <p class="text-xs text-gray-500 mb-3">변화를 위한 고독한 기다림과 성장의 공간</p>
+                    <div id="symbol-count-3" class="text-[11px] font-semibold text-amber-700 bg-amber-50 px-2.5 py-1 rounded-md inline-block">
+                        3개의 학생 해석 보기
+                    </div>
+                </div>
+
+                <!-- Card 4 -->
+                <div onclick="openSymbolModal('나비')" class="bg-white rounded-2xl p-5 border border-emerald-200/80 shadow-sm hover:shadow-md hover:-translate-y-1 transition-all cursor-pointer group">
+                    <div class="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-600 flex items-center justify-center text-xl mb-3 group-hover:scale-110 transition-transform">
+                        <i class="fa-solid fa-butterfly"></i>
+                    </div>
+                    <h4 class="font-bold text-gray-800 mb-1 flex items-center justify-between">
+                        <span>나비 (Butterfly)</span>
+                        <i class="fa-solid fa-plus text-xs text-emerald-400"></i>
+                    </h4>
+                    <p class="text-xs text-gray-500 mb-3">진정한 자아 실현과 사랑을 나누는 삶</p>
+                    <div id="symbol-count-4" class="text-[11px] font-semibold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-md inline-block">
+                        4개의 학생 해석 보기
+                    </div>
+                </div>
+            </div>
+
+            <!-- Debate Topic Card 1 -->
+            <div class="bg-white rounded-3xl p-6 sm:p-8 border border-amber-200 shadow-lg">
+                <div class="flex items-center space-x-2 text-amber-600 text-xs font-bold uppercase tracking-wider mb-2">
+                    <i class="fa-solid fa-comments"></i>
+                    <span>1차시 토론 논제</span>
+                </div>
+                <h3 class="text-xl sm:text-2xl font-bold text-gray-900 mb-4 leading-snug">
+                    "목적을 알 수 없는 무한 경쟁(애벌레 기둥) 속에서도, 올라가는 과정 자체에 의미가 있는가?"
+                </h3>
+                <p class="text-xs sm:text-sm text-gray-600 mb-6 bg-amber-50/60 p-4 rounded-xl border border-amber-100">
+                    <strong class="text-amber-800">배경:</strong> 호랑 애벌레는 기둥 꼭대기에 무엇이 있는지 모르면서도 남을 밟고 계속 올라갑니다. 입시와 성과 중심의 우리 현실에서 이 경쟁은 단순히 허무한 것일까요, 아니면 역량을 단련하는 필요조건일까요?
+                </p>
+
+                <!-- Voting Section -->
+                <div class="grid md:grid-cols-2 gap-8 items-center">
+                    <div>
+                        <h4 class="text-xs font-bold text-gray-500 uppercase mb-3">실시간 찬반 투표 참여</h4>
+                        <div class="space-y-3">
+                            <button onclick="castVote('pro')" id="btnVotePro" class="w-full flex items-center justify-between p-3.5 rounded-xl border-2 border-emerald-200 hover:border-emerald-500 hover:bg-emerald-50 text-left transition-all font-semibold text-sm">
+                                <span class="flex items-center text-emerald-800">
+                                    <i class="fa-solid fa-thumbs-up mr-2 text-emerald-600"></i>
+                                    찬성 (의미 있다: 성취감, 자기련성)
+                                </span>
+                                <span id="countVotePro" class="text-xs px-2 py-0.5 bg-emerald-100 text-emerald-800 rounded-full font-bold">0표</span>
+                            </button>
+
+                            <button onclick="castVote('con')" id="btnVoteCon" class="w-full flex items-center justify-between p-3.5 rounded-xl border-2 border-rose-200 hover:border-rose-500 hover:bg-rose-50 text-left transition-all font-semibold text-sm">
+                                <span class="flex items-center text-rose-800">
+                                    <i class="fa-solid fa-thumbs-down mr-2 text-rose-600"></i>
+                                    반대 (의미 없다: 타인 희생, 본질 상실)
+                                </span>
+                                <span id="countVoteCon" class="text-xs px-2 py-0.5 bg-rose-100 text-rose-800 rounded-full font-bold">0표</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Live Dynamic Poll Bar -->
+                    <div class="bg-gray-50 p-5 rounded-2xl border border-gray-200">
+                        <div class="flex justify-between text-xs font-bold text-gray-700 mb-2">
+                            <span>투표 결과 현황</span>
+                            <span id="totalVotesText">총 0명 참여</span>
+                        </div>
+                        <div class="h-6 w-full bg-gray-200 rounded-full overflow-hidden flex shadow-inner mb-3">
+                            <div id="barPro" class="bg-emerald-500 h-full text-[10px] text-white font-bold flex items-center justify-center transition-all duration-500" style="width: 50%;">찬성 50%</div>
+                            <div id="barCon" class="bg-rose-500 h-full text-[10px] text-white font-bold flex items-center justify-center transition-all duration-500" style="width: 50%;">반대 50%</div>
+                        </div>
+                        <p class="text-[11px] text-gray-400 text-center">버튼을 눌러 투표권을 행사하면 결과에 즉시 반영됩니다.</p>
+                    </div>
+                </div>
+
+                <!-- Opinion Input -->
+                <div class="mt-6 pt-6 border-t border-gray-100">
+                    <label class="block text-xs font-bold text-gray-700 mb-2">나의 주장 한 줄 근거 작성하기</label>
+                    <div class="flex gap-2">
+                        <input type="text" id="inputDebateOpinion" placeholder="예: 목적이 명확하지 않은 경쟁은 타인을 해치고 자기 소외를 초래하기 때문이다." class="flex-1 px-4 py-2.5 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-amber-500 text-sm">
+                        <button onclick="submitDebateOpinion()" class="px-5 py-2.5 bg-amber-500 hover:bg-amber-600 text-white font-bold text-sm rounded-xl shadow-md shrink-0">
+                            등록
+                        </button>
+                    </div>
+                    <div id="opinionList" class="mt-4 space-y-2 max-h-40 overflow-y-auto pr-1">
+                        <!-- Dynamic opinion chips appear here -->
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION 3: 2차시 밸런스 게임 & 나만의 고치 선언문 -->
+        <section id="balance" class="scroll-mt-24">
+            <div class="text-center max-w-2xl mx-auto mb-10">
+                <span class="px-3 py-1 bg-emerald-100 text-emerald-800 text-xs font-bold rounded-full">2차시 핵심 활동</span>
+                <h3 class="text-2xl sm:text-3xl font-bold text-gray-900 mt-2">가치관 밸런스 게임 & 고치 선언문</h3>
+                <p class="text-sm text-gray-500 mt-1">내가 선택할 삶의 방식은 무엇이며, 어떤 날개를 갖고 싶나요?</p>
+            </div>
+
+            <!-- Balance Game -->
+            <div class="bg-gradient-to-br from-amber-50 to-emerald-50 rounded-3xl p-6 sm:p-8 border border-amber-200 mb-12 shadow-sm">
+                <div class="text-center mb-6">
+                    <span class="px-2.5 py-1 bg-amber-500 text-white text-[11px] font-extrabold rounded">가치관 VS 밸런스 게임</span>
+                    <h4 class="text-lg sm:text-xl font-bold text-gray-900 mt-2">
+                        당신이 에벌레라면 어떤 길을 선택하겠습니까?
+                    </h4>
+                </div>
+
+                <div class="grid md:grid-cols-2 gap-4">
+                    <!-- Choice A -->
+                    <div onclick="selectBalanceChoice('A')" id="cardChoiceA" class="bg-white p-6 rounded-2xl border-2 border-amber-300 hover:border-amber-500 cursor-pointer transition-all shadow-sm relative group">
+                        <div class="flex items-center space-x-3 mb-3">
+                            <span class="w-8 h-8 rounded-full bg-amber-500 text-white font-black flex items-center justify-center text-sm">A</span>
+                            <h5 class="font-bold text-gray-900">호랑 애벌레의 길 (내부 개혁형)</h5>
+                        </div>
+                        <p class="text-xs text-gray-600 leading-relaxed mb-4">
+                            "체제 안에서 끝까지 올라가 정상의 허무함을 직접 확인하고, 아직 아래에 있는 다른 애벌레들에게 진실을 알려주겠다."
+                        </p>
+                        <span class="text-[11px] font-bold text-amber-600 group-hover:underline">선택하기 →</span>
+                    </div>
+
+                    <!-- Choice B -->
+                    <div onclick="selectBalanceChoice('B')" id="cardChoiceB" class="bg-white p-6 rounded-2xl border-2 border-emerald-300 hover:border-emerald-500 cursor-pointer transition-all shadow-sm relative group">
+                        <div class="flex items-center space-x-3 mb-3">
+                            <span class="w-8 h-8 rounded-full bg-emerald-500 text-white font-black flex items-center justify-center text-sm">B</span>
+                            <h5 class="font-bold text-gray-900">노랑 애벌레의 길 (외부 변혁형)</h5>
+                        </div>
+                        <p class="text-xs text-gray-600 leading-relaxed mb-4">
+                            "체제(기둥)에서 미련 없이 내려와 자신의 내면으로 들어가 고치를 틀고, 스스로 나비가 되는 본보기를 보여주겠다."
+                        </p>
+                        <span class="text-[11px] font-bold text-emerald-600 group-hover:underline">선택하기 →</span>
+                    </div>
+                </div>
+
+                <div id="balanceFeedback" class="mt-4 text-center text-xs font-bold text-amber-800 hidden">
+                    <!-- Selection result display -->
+                </div>
+            </div>
+
+            <!-- Digital Cocoon & Butterfly Declaration Generator -->
+            <div class="bg-white rounded-3xl p-6 sm:p-10 border border-emerald-200 shadow-xl">
+                <div class="max-w-3xl mx-auto">
+                    <div class="text-center mb-8">
+                        <div class="w-14 h-14 bg-emerald-100 text-emerald-600 rounded-2xl flex items-center justify-center text-2xl mx-auto mb-3 shadow-inner">
+                            <i class="fa-solid fa-wand-magic-sparkles"></i>
+                        </div>
+                        <h3 class="text-2xl font-bold text-gray-900">디지털 나만의 고치 선언문 작성기</h3>
+                        <p class="text-xs sm:text-sm text-gray-500 mt-1">내가 벗어던질 허물과 새로 펼칠 날개를 선언하고 나비로 탄생시키세요.</p>
+                    </div>
+
+                    <form id="butterflyForm" onsubmit="generateButterfly(event)" class="space-y-6">
+                        <div class="grid sm:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-xs font-bold text-gray-700 mb-1">작성자 이름 / 학번</label>
+                                <input type="text" id="bfAuthor" required placeholder="예: 2학년 3반 홍길동" class="w-full px-4 py-2.5 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-emerald-500 text-sm">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-gray-700 mb-1">나비 날개 상징 색상</label>
+                                <select id="bfColor" class="w-full px-4 py-2.5 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-emerald-500 text-sm">
+                                    <option value="from-amber-400 to-amber-600">황금빛 희망 (Yellow/Gold)</option>
+                                    <option value="from-emerald-400 to-teal-600">성장과 생명 (Green/Teal)</option>
+                                    <option value="from-sky-400 to-indigo-600">자유와 용기 (Blue/Indigo)</option>
+                                    <option value="from-rose-400 to-pink-600">사랑과 연대 (Rose/Pink)</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-bold text-gray-700 mb-1">
+                                <i class="fa-solid fa-shield-halved text-amber-500 mr-1"></i>
+                                내가 벗어던질 애벌레 허물 (버리고 싶은 관성/집착)
+                            </label>
+                            <input type="text" id="bfOldShed" required placeholder="예: 남과의 끊임없는 비교, 성적에만 집착하던 불안감" class="w-full px-4 py-2.5 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-amber-500 text-sm">
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-bold text-gray-700 mb-1">
+                                <i class="fa-solid fa-butterfly text-emerald-500 mr-1"></i>
+                                내가 피워낼 나비의 날개 (추구하고 싶은 진짜 가치)
+                            </label>
+                            <textarea id="bfNewWing" required rows="3" placeholder="예: 나만의 독창성을 믿고 타인과 연대하며 세상을 더 따뜻하게 만드는 삶" class="w-full px-4 py-2.5 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-emerald-500 text-sm"></textarea>
+                        </div>
+
+                        <button type="submit" class="w-full py-3.5 bg-gradient-to-r from-emerald-500 via-teal-500 to-amber-500 hover:from-emerald-600 hover:to-amber-600 text-white font-extrabold rounded-xl shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-0.5 flex items-center justify-center space-x-2">
+                            <i class="fa-solid fa-paper-plane"></i>
+                            <span>나비 생성하고 날려보내기</span>
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Butterfly Sky Wall Gallery -->
+                <div class="mt-12 pt-8 border-t border-gray-100">
+                    <div class="flex items-center justify-between mb-6">
+                        <h4 class="font-bold text-gray-800 flex items-center">
+                            <i class="fa-solid fa-cloud-sun text-amber-500 mr-2"></i>
+                            우리들의 희망 나비 갤러리 (Live Butterfly Wall)
+                        </h4>
+                        <span id="butterflyCount" class="text-xs font-bold px-2.5 py-1 bg-emerald-100 text-emerald-800 rounded-full">
+                            0마리 탄생
+                        </span>
+                    </div>
+
+                    <div id="butterflyGallery" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 min-h-[160px]">
+                        <!-- Dynamic Butterfly cards rendered here -->
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION 4: Live Guestbook -->
+        <section id="guestbook" class="scroll-mt-24">
+            <div class="bg-amber-50/70 rounded-3xl p-6 sm:p-8 border border-amber-200">
+                <div class="max-w-2xl mx-auto text-center mb-6">
+                    <h3 class="text-xl sm:text-2xl font-bold text-gray-900">실시간 캠프 한 줄 방명록</h3>
+                    <p class="text-xs sm:text-sm text-gray-500 mt-1">오늘 인문 토론 캠프를 마무리하며 가슴에 남은 한 줄 소감을 전해주세요.</p>
+                </div>
+
+                <form onsubmit="addGuestbookEntry(event)" class="max-w-xl mx-auto flex gap-2 mb-8">
+                    <input type="text" id="gbName" required placeholder="이름" class="w-24 px-3 py-2 rounded-xl border border-gray-300 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-amber-500">
+                    <input type="text" id="gbMessage" required placeholder="예: 무작정 높이 오르기보다 내 날개를 발견하는 시간이었습니다." class="flex-1 px-4 py-2 rounded-xl border border-gray-300 text-xs focus:outline-none focus:ring-2 focus:ring-amber-500">
+                    <button type="submit" class="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white font-bold text-xs rounded-xl shadow-md shrink-0">
+                        남기기
+                    </button>
+                </form>
+
+                <div id="guestbookList" class="max-w-3xl mx-auto space-y-2 max-h-60 overflow-y-auto pr-1">
+                    <!-- Guestbook items appear here -->
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- MODAL 1: Pre-reading Worksheet Modal -->
+    <div id="worksheetModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-3xl max-w-2xl w-full max-h-[90vh] overflow-y-auto p-6 sm:p-8 shadow-2xl relative animate-rise-up">
+            <button onclick="closeWorksheetModal()" class="absolute top-5 right-5 text-gray-400 hover:text-gray-600 text-lg w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+
+            <div class="flex items-center space-x-3 mb-6 border-b border-gray-100 pb-4">
+                <div class="p-3 bg-amber-100 text-amber-700 rounded-xl">
+                    <i class="fa-solid fa-book-bookmark text-xl"></i>
+                </div>
+                <div>
+                    <h3 class="text-xl font-bold text-gray-900">사전 활동지 작성 / 제출</h3>
+                    <p class="text-xs text-gray-500">《꽃들에게 희망을》 읽고 깊이 있게 정리한 내용</p>
+                </div>
+            </div>
+
+            <form onsubmit="saveWorksheet(event)" class="space-y-5">
+                <div>
+                    <label class="block text-xs font-bold text-gray-700 mb-1">[활동 1] 나만의 명장면 & 인상 깊은 문장</label>
+                    <textarea id="wsScene" rows="2" placeholder="예: 노랑 애벌레가 기둥을 내려와 자신의 고치를 틀기로 결심하는 장면..." class="w-full p-3 border border-gray-300 rounded-xl text-xs focus:ring-2 focus:ring-amber-500 focus:outline-none"></textarea>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-gray-700 mb-1">[활동 2] 등장인물에게 묻고 싶은 질문 (호랑 / 노랑 애벌레 등)</label>
+                    <input type="text" id="wsQuestion" placeholder="예: 호랑 애벌레야, 꼭대기에서 아무것도 없음을 깨달았을 때 가장 먼저 든 생각은 뭐였니?" class="w-full p-3 border border-gray-300 rounded-xl text-xs focus:ring-2 focus:ring-amber-500 focus:outline-none">
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-gray-700 mb-1">[활동 3] 나만의 상징 정의 (애벌레 기둥의 의미)</label>
+                    <input type="text" id="wsSymbolDef" placeholder="예: 남들에게 뒤처지지 않기 위해 억지로 버티는 입시 경쟁 체제" class="w-full p-3 border border-gray-300 rounded-xl text-xs focus:ring-2 focus:ring-amber-500 focus:outline-none">
+                </div>
+
+                <div class="pt-4 flex justify-end space-x-3 border-t border-gray-100">
+                    <button type="button" onclick="closeWorksheetModal()" class="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-bold rounded-xl">닫기</button>
+                    <button type="submit" class="px-5 py-2 bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold rounded-xl shadow-md">저장 및 확인</button>
+                </div>
+            </form>
+        </div>
     </div>
-  );
-}
+
+    <!-- MODAL 2: Symbol Detail Modal -->
+    <div id="symbolModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl relative animate-rise-up">
+            <button onclick="closeSymbolModal()" class="absolute top-5 right-5 text-gray-400 hover:text-gray-600 text-lg">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+
+            <h3 id="symbolModalTitle" class="text-xl font-bold text-gray-900 mb-2">상징 명칭</h3>
+            <p class="text-xs text-gray-500 mb-4">학생들이 함께 정의한 다채로운 해석입니다.</p>
+
+            <div id="symbolModalList" class="space-y-2 max-h-52 overflow-y-auto mb-4 p-2 bg-amber-50/50 rounded-xl border border-amber-100 text-xs">
+                <!-- Dynamic student interpretations -->
+            </div>
+
+            <div class="space-y-2 pt-2 border-t border-gray-100">
+                <label class="block text-xs font-bold text-gray-700">나만의 새로운 해석 추가하기</label>
+                <div class="flex gap-2">
+                    <input type="text" id="inputNewSymbolDef" placeholder="자신의 정의를 적어주세요." class="flex-1 px-3 py-2 border border-gray-300 rounded-xl text-xs focus:ring-2 focus:ring-amber-500 focus:outline-none">
+                    <button onclick="addSymbolDefinition()" class="px-4 py-2 bg-amber-500 text-white font-bold text-xs rounded-xl shadow">등록</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification Container -->
+    <div id="toast" class="fixed bottom-6 right-6 bg-charcoal-800 text-white px-5 py-3 rounded-2xl shadow-2xl text-xs font-bold flex items-center space-x-2 transform translate-y-20 opacity-0 transition-all duration-300 z-50 pointer-events-none">
+        <i id="toastIcon" class="fa-solid fa-circle-check text-emerald-400"></i>
+        <span id="toastMsg">처리되었습니다.</span>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-charcoal-800 text-gray-400 py-10 mt-20 border-t border-gray-700">
+        <div class="max-w-7xl mx-auto px-4 text-center">
+            <div class="flex items-center justify-center space-x-2 text-amber-400 font-bold mb-3">
+                <i class="fa-solid fa-butterfly text-xl"></i>
+                <span class="text-white text-base">꽃들에게 희망을 인문토론캠프</span>
+            </div>
+            <p class="text-xs text-gray-400 max-w-md mx-auto leading-relaxed mb-4">
+                "애벌레가 날개가 될 수 있다는 가능성을 믿을 때, 비로소 세상은 진짜 꽃을 피운다."
+            </p>
+            <p class="text-[11px] text-gray-400">
+                &copy; 2026 고등학교 인문학 토론 교육 프로그램. Trina Paulus Original Work Based.
+            </p>
+        </div>
+    </footer>
+
+    <script>
+        // Global App State
+        let currentTimerSession = 1;
+        let timerSeconds = 50 * 60;
+        let timerInterval = null;
+        let isTimerRunning = false;
+
+        let votes = { pro: 14, con: 18 };
+        let activeSymbolTitle = '';
+
+        const symbolDatabase = {
+            '애벌레 기둥': [
+                "맹목적인 수능/성적 중심의 무한 경쟁 사회",
+                "남들이 모두 올라가니 두려워서 따라 올라가는 집단 심리",
+                "목적지가 어디인지 알지 못한 채 달리는 현대인의 삶"
+            ],
+            '노랑 애벌레': [
+                "타인의 시선보다 자신의 내면 소리에 귀 기울이는 존재",
+                "경쟁에서 벗어나 사랑과 연대의 가치를 찾아 나서는 용기",
+                "진정한 자아 정체성을 고민하는 청소년의 초상"
+            ],
+            '고치': [
+                "남들과 떨어져 자기 성찰에 집중하는 고독하지만 필수적인 시간",
+                "변화를 위한 준비 기간이자 묵묵한 노력의 성소",
+                "새로운 삶의 방식을 창조하기 위한 축복의 공간"
+            ],
+            '나비': [
+                "자신의 본성을 실현하고 타인에게 희망과 기쁨을 주는 존재",
+                "경쟁을 넘어 공존의 아름다움을 전파하는 자유로운 자아",
+                "나만의 독창성과 진정한 행복을 찾은 삶의 단계"
+            ]
+        };
+
+        const butterflyStorage = [
+            {
+                id: 1,
+                author: "2학년 김서연",
+                color: "from-amber-400 to-amber-600",
+                oldShed: "타인과의 비교에서 오는 열등감과 조급함",
+                newWing: "나만의 속도로 꿈을 가꾸고 스스로를 온전히 긍정하는 나비"
+            },
+            {
+                id: 2,
+                author: "1학년 박준혁",
+                color: "from-emerald-400 to-teal-600",
+                oldShed: "오직 성적표 숫자로만 나를 판단하려던 편견",
+                newWing: "친구들과 연대하며 더불어 살아가는 가치를 피우는 나비"
+            }
+        ];
+
+        const guestbookStorage = [
+            { name: "이민우 선생님", msg: "학생들의 깊이 있는 고민과 나비 선언문이 가슴을 울립니다." },
+            { name: "3학년 최지민", msg: "기둥을 내려올 수 있는 용기도 선택이라는 것을 깨달았습니다." }
+        ];
+
+        function updateTimerDisplay() {
+            const mins = Math.floor(timerSeconds / 60);
+            const secs = timerSeconds % 60;
+            document.getElementById('timerMinutes').innerText = String(mins).padStart(2, '0');
+            document.getElementById('timerSeconds').innerText = String(secs).padStart(2, '0');
+        }
+
+        function toggleTimer() {
+            if (isTimerRunning) {
+                clearInterval(timerInterval);
+                isTimerRunning = false;
+                document.getElementById('timerBtnText').innerText = "타이머 재개";
+                document.getElementById('timerIcon').className = "fa-solid fa-play";
+            } else {
+                isTimerRunning = true;
+                document.getElementById('timerBtnText').innerText = "일시정지";
+                document.getElementById('timerIcon').className = "fa-solid fa-pause";
+                
+                timerInterval = setInterval(() => {
+                    if (timerSeconds > 0) {
+                        timerSeconds--;
+                        updateTimerDisplay();
+                    } else {
+                        clearInterval(timerInterval);
+                        isTimerRunning = false;
+                        showToast("⏳ 차시 시간이 종료되었습니다! 다음 활동으로 이동해주세요.");
+                    }
+                }, 1000);
+            }
+        }
+
+        function resetTimer() {
+            clearInterval(timerInterval);
+            isTimerRunning = false;
+            timerSeconds = 50 * 60;
+            updateTimerDisplay();
+            document.getElementById('timerBtnText').innerText = "타이머 시작";
+            document.getElementById('timerIcon').className = "fa-solid fa-play";
+        }
+
+        function switchSession(sessionNum) {
+            currentTimerSession = sessionNum;
+            resetTimer();
+            if (sessionNum === 1) {
+                document.getElementById('timerSessionBadge').innerText = "1차시 진행 중";
+                document.getElementById('timerTitle').innerText = "경쟁의 기둥을 묻다 (50분)";
+                document.getElementById('btnSession1').className = "px-2 py-1 text-xs rounded font-medium bg-amber-100 text-amber-800 hover:bg-amber-200";
+                document.getElementById('btnSession2').className = "px-2 py-1 text-xs rounded font-medium bg-gray-100 text-gray-600 hover:bg-gray-200";
+            } else {
+                document.getElementById('timerSessionBadge').innerText = "2차시 진행 중";
+                document.getElementById('timerTitle').innerText = "나만의 고치를 틀다 (50분)";
+                document.getElementById('btnSession2').className = "px-2 py-1 text-xs rounded font-medium bg-emerald-100 text-emerald-800 hover:bg-emerald-200";
+                document.getElementById('btnSession1').className = "px-2 py-1 text-xs rounded font-medium bg-gray-100 text-gray-600 hover:bg-gray-200";
+            }
+        }
+
+        function castVote(type) {
+            votes[type]++;
+            updatePollUI();
+            showToast(type === 'pro' ? '👍 찬성 투표가 반영되었습니다!' : '👎 반대 투표가 반영되었습니다!');
+        }
+
+        function updatePollUI() {
+            const total = votes.pro + votes.con;
+            const proPercent = total === 0 ? 50 : Math.round((votes.pro / total) * 100);
+            const conPercent = total === 0 ? 50 : 100 - proPercent;
+
+            document.getElementById('countVotePro').innerText = `${votes.pro}표`;
+            document.getElementById('countVoteCon').innerText = `${votes.con}표`;
+            document.getElementById('totalVotesText').innerText = `총 ${total}명 참여`;
+
+            const barPro = document.getElementById('barPro');
+            const barCon = document.getElementById('barCon');
+
+            barPro.style.width = `${proPercent}%`;
+            barPro.innerText = `찬성 ${proPercent}%`;
+
+            barCon.style.width = `${conPercent}%`;
+            barCon.innerText = `반대 ${conPercent}%`;
+        }
+
+        function submitDebateOpinion() {
+            const input = document.getElementById('inputDebateOpinion');
+            const text = input.value.trim();
+            if (!text) return;
+
+            const list = document.getElementById('opinionList');
+            const chip = document.createElement('div');
+            chip.className = "p-2.5 bg-amber-50 rounded-xl border border-amber-200 text-xs text-gray-700 flex items-start space-x-2 animate-rise-up";
+            chip.innerHTML = `<i class="fa-solid fa-quote-left text-amber-500 mt-0.5"></i><span>${escapeHtml(text)}</span>`;
+            list.prepend(chip);
+
+            input.value = '';
+            showToast('💬 토론 근거가 등록되었습니다.');
+        }
+
+        function openSymbolModal(title) {
+            activeSymbolTitle = title;
+            document.getElementById('symbolModalTitle').innerText = title;
+            renderSymbolList();
+            document.getElementById('symbolModal').classList.remove('hidden');
+        }
+
+        function closeSymbolModal() {
+            document.getElementById('symbolModal').classList.add('hidden');
+        }
+
+        function renderSymbolList() {
+            const list = document.getElementById('symbolModalList');
+            list.innerHTML = '';
+            const items = symbolDatabase[activeSymbolTitle] || [];
+            items.forEach((item, idx) => {
+                const div = document.createElement('div');
+                div.className = "p-2 bg-white rounded-lg border border-amber-100 flex items-center space-x-2";
+                div.innerHTML = `<span class="w-5 h-5 bg-amber-200 text-amber-800 rounded-full flex items-center justify-center font-bold text-[10px] shrink-0">${idx+1}</span><span>${escapeHtml(item)}</span>`;
+                list.appendChild(div);
+            });
+        }
+
+        function addSymbolDefinition() {
+            const input = document.getElementById('inputNewSymbolDef');
+            const text = input.value.trim();
+            if (!text) return;
+
+            if (symbolDatabase[activeSymbolTitle]) {
+                symbolDatabase[activeSymbolTitle].push(text);
+                renderSymbolList();
+                input.value = '';
+                showToast('✨ 상징 정의가 공유되었습니다.');
+            }
+        }
+
+        function selectBalanceChoice(choice) {
+            const fb = document.getElementById('balanceFeedback');
+            fb.classList.remove('hidden');
+            if (choice === 'A') {
+                fb.innerText = "💡 [호랑 애벌레의 길] 선택 완료: 꼭대기에 직접 올라가 허무를 검증하고 사회적 사명을 다하려는 리더십 관점입니다.";
+            } else {
+                fb.innerText = "💡 [노랑 애벌레의 길] 선택 완료: 타성에서 벗어나 스스로 나비가 됨으로써 근본적인 대체적 삶을 제시하는 지혜 관점입니다.";
+            }
+            showToast('가치관 선택이 저장되었습니다.');
+        }
+
+        function generateButterfly(e) {
+            e.preventDefault();
+            const author = document.getElementById('bfAuthor').value.trim();
+            const color = document.getElementById('bfColor').value;
+            const oldShed = document.getElementById('bfOldShed').value.trim();
+            const newWing = document.getElementById('bfNewWing').value.trim();
+
+            const newBf = {
+                id: Date.now(),
+                author,
+                color,
+                oldShed,
+                newWing
+            };
+
+            butterflyStorage.unshift(newBf);
+            renderButterflies();
+
+            document.getElementById('butterflyForm').reset();
+            showToast('🦋 아름다운 나비가 탄생하여 희망의 하늘로 날아올랐습니다!');
+        }
+
+        function renderButterflies() {
+            const gallery = document.getElementById('butterflyGallery');
+            gallery.innerHTML = '';
+            document.getElementById('butterflyCount').innerText = `${butterflyStorage.length}마리 탄생`;
+
+            butterflyStorage.forEach(bf => {
+                const card = document.createElement('div');
+                card.className = `bg-white p-5 rounded-2xl border border-gray-200 shadow-md hover:shadow-xl transition-all relative overflow-hidden animate-rise-up group`;
+                card.innerHTML = `
+                    <div class="absolute top-0 right-0 w-20 h-20 bg-gradient-to-br ${bf.color} opacity-10 rounded-bl-full group-hover:scale-125 transition-transform"></div>
+                    <div class="flex items-center justify-between mb-3">
+                        <span class="text-xs font-bold text-gray-800 flex items-center">
+                            <i class="fa-solid fa-butterfly text-amber-500 mr-1.5 animate-flutter"></i>
+                            ${escapeHtml(bf.author)}
+                        </span>
+                        <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-ping"></span>
+                    </div>
+                    <div class="space-y-2 text-xs">
+                        <div class="bg-amber-50 p-2 rounded-lg border border-amber-100">
+                            <span class="font-bold text-amber-800 block text-[10px]"><i class="fa-solid fa-shield-halved mr-1"></i>벗어던질 허물:</span>
+                            <p class="text-gray-600">${escapeHtml(bf.oldShed)}</p>
+                        </div>
+                        <div class="bg-emerald-50 p-2 rounded-lg border border-emerald-100">
+                            <span class="font-bold text-emerald-800 block text-[10px]"><i class="fa-solid fa-wings font-bold mr-1"></i>펼칠 나비 날개:</span>
+                            <p class="text-gray-700 font-medium">${escapeHtml(bf.newWing)}</p>
+                        </div>
+                    </div>
+                `;
+                gallery.appendChild(card);
+            });
+        }
+
+        function addGuestbookEntry(e) {
+            e.preventDefault();
+            const name = document.getElementById('gbName').value.trim();
+            const msg = document.getElementById('gbMessage').value.trim();
+
+            if (name && msg) {
+                guestbookStorage.unshift({ name, msg });
+                renderGuestbook();
+                document.getElementById('gbMessage').value = '';
+                showToast('✍️ 방명록 소감이 남겨졌습니다.');
+            }
+        }
+
+        function renderGuestbook() {
+            const list = document.getElementById('guestbookList');
+            list.innerHTML = '';
+            guestbookStorage.forEach(item => {
+                const div = document.createElement('div');
+                div.className = "p-2.5 bg-white rounded-xl border border-amber-200 text-xs flex items-center justify-between shadow-sm animate-rise-up";
+                div.innerHTML = `
+                    <div class="flex items-center space-x-2">
+                        <span class="font-bold text-amber-800 bg-amber-100 px-2 py-0.5 rounded-md shrink-0">${escapeHtml(item.name)}</span>
+                        <span class="text-gray-700">${escapeHtml(item.msg)}</span>
+                    </div>
+                    <i class="fa-solid fa-leaf text-emerald-500 text-xs"></i>
+                `;
+                list.appendChild(div);
+            });
+        }
+
+        function openWorksheetModal() {
+            document.getElementById('worksheetModal').classList.remove('hidden');
+        }
+
+        function closeWorksheetModal() {
+            document.getElementById('worksheetModal').classList.add('hidden');
+        }
+
+        function saveWorksheet(e) {
+            e.preventDefault();
+            closeWorksheetModal();
+            showToast('📋 사전 활동지가 저장되었습니다.');
+        }
+
+        function showToast(msg) {
+            const toast = document.getElementById('toast');
+            document.getElementById('toastMsg').innerText = msg;
+            toast.classList.remove('translate-y-20', 'opacity-0');
+            toast.classList.add('translate-y-0', 'opacity-100');
+
+            setTimeout(() => {
+                toast.classList.add('translate-y-20', 'opacity-0');
+                toast.classList.remove('translate-y-0', 'opacity-100');
+            }, 3000);
+        }
+
+        function escapeHtml(str) {
+            return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+        }
+
+        window.onload = function() {
+            updateTimerDisplay();
+            updatePollUI();
+            renderButterflies();
+            renderGuestbook();
+        };
+    </script>
+</body>
+</html>
