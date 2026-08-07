@@ -1,1373 +1,548 @@
 <!DOCTYPE html>
-<html lang="ko" class="scroll-smooth">
+<html lang="ko">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>꽃들에게 희망을 - 고등학교 인문토론캠프</title>
-    <!-- Tailwind CSS CDN -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Google Fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&display=swap" rel="stylesheet">
-    <!-- FontAwesome Icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        sunflower: {
-                            50: '#fffbe8',
-                            100: '#fff3ad',
-                            400: '#fbbf24',
-                            500: '#f59e0b',
-                            600: '#d97706',
-                            700: '#b45309'
-                        },
-                        leaf: {
-                            50: '#ecfdf5',
-                            100: '#d1fae5',
-                            400: '#34d399',
-                            500: '#10b981',
-                            600: '#059669',
-                            700: '#047857'
-                        },
-                        charcoal: {
-                            800: '#1f2937',
-                            900: '#111827'
-                        },
-                        cream: '#fef3c7'
-                    },
-                    fontFamily: {
-                        sans: ['Noto Sans KR', 'sans-serif'],
-                    },
-                    keyframes: {
-                        float: {
-                            '0%, 100%': { transform: 'translateY(0px) rotate(0deg)' },
-                            '50%': { transform: 'translateY(-12px) rotate(2deg)' },
-                        },
-                        flutter: {
-                            '0%, 100%': { transform: 'scaleX(1)' },
-                            '50%': { transform: 'scaleX(0.7)' }
-                        },
-                        pulseGlow: {
-                            '0%, 100%': { boxShadow: '0 0 15px rgba(245, 158, 11, 0.4)' },
-                            '50%': { boxShadow: '0 0 25px rgba(245, 158, 11, 0.8)' }
-                        },
-                        riseUp: {
-                            '0%': { opacity: '0', transform: 'translateY(30px) scale(0.9)' },
-                            '100%': { opacity: '1', transform: 'translateY(0) scale(1)' }
-                        }
-                    },
-                    animation: {
-                        'float-slow': 'float 6s ease-in-out infinite',
-                        'flutter': 'flutter 0.4s ease-in-out infinite alternate',
-                        'pulse-glow': 'pulseGlow 2s infinite',
-                        'rise-up': 'riseUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards'
-                    }
-                }
-            }
-        }
-    </script>
-    <style>
-        body {
-            font-family: 'Noto Sans KR', sans-serif;
-            background-color: #fdfbf7;
-            color: #1f2937;
-            overflow-x: hidden;
-        }
-        .bg-grid-pattern {
-            background-image: radial-gradient(#f59e0b 0.75px, transparent 0.75px);
-            background-size: 24px 24px;
-        }
-        .glass-card {
-            background: rgba(255, 255, 255, 0.85);
-            backdrop-filter: blur(12px);
-            border: 1px solid rgba(245, 158, 11, 0.2);
-        }
-        /* Custom Scrollbar */
-        ::-webkit-scrollbar {
-            width: 8px;
-        }
-        ::-webkit-scrollbar-track {
-            background: #fef3c7;
-        }
-        ::-webkit-scrollbar-thumb {
-            background: #f59e0b;
-            border-radius: 4px;
-        }
-    </style>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>☀️ 여름날의 독서토론 기록장 📚</title>
+
+<!-- Fonts: 헤딩(Gowun Batang, 부드러운 명조) + 본문(Gaegu, 동글동글 손글씨체) -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&family=Gaegu:wght@400;700&family=Jua&display=swap" rel="stylesheet">
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.5/babel.min.js"></script>
+<script src="https://cdn.tailwindcss.com"></script>
+
+<style>
+  :root{
+    --sky:#BEE3F4; --sky-deep:#6FB8DE;
+    --green:#BFE3C9; --green-deep:#6FAE83;
+    --sand:#F3E3B9; --sand-deep:#E0BE7A;
+    --coral:#FF9B85; --coral-deep:#F1785E;
+    --ink:#3E3A34; --ink-soft:#8A8175;
+    --bg:#FBF8F0;
+  }
+  html,body{ background:var(--bg); font-family:'Gaegu', sans-serif; color:var(--ink); }
+  .font-head{ font-family:'Gowun Batang', serif; }
+  .font-cute{ font-family:'Jua', 'Gaegu', sans-serif; letter-spacing:.01em; }
+  .title-bold{
+    color:#2C2721;
+    text-shadow: 0.7px 0 currentColor, -0.7px 0 currentColor, 0 0.7px currentColor, 0 -0.3px currentColor;
+  }
+  ::selection{ background:var(--coral); color:white; }
+
+  /* 부드러운 물결 배경 텍스처 */
+  .wave-bg{
+    background-image: radial-gradient(circle at 10% 20%, rgba(190,227,244,0.5) 0, transparent 45%),
+                       radial-gradient(circle at 90% 10%, rgba(243,227,185,0.5) 0, transparent 40%),
+                       radial-gradient(circle at 80% 90%, rgba(191,227,201,0.45) 0, transparent 45%);
+  }
+
+  .cute-card{
+    background:#fff;
+    border-radius:28px;
+    border:2px solid rgba(62,58,52,0.08);
+    box-shadow: 0 10px 0 rgba(62,58,52,0.05), 0 18px 40px -20px rgba(62,58,52,0.25);
+  }
+
+  .bookmark-tab{
+    position:relative;
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    padding:10px 22px 12px 20px;
+    border-radius:18px 18px 4px 4px;
+    font-family:'Gowun Batang', serif;
+    font-weight:700;
+    color:#fff;
+    box-shadow: 0 6px 14px -6px rgba(0,0,0,0.35);
+    transform: translateY(2px);
+  }
+  .bookmark-tab::after{
+    content:"";
+    position:absolute;
+    left:50%; bottom:-9px; transform:translateX(-50%);
+    width:0; height:0;
+    border-left:11px solid transparent;
+    border-right:11px solid transparent;
+    border-top:9px solid currentColor;
+  }
+
+  .field-label{ font-family:'Gowun Batang', serif; font-weight:700; color:var(--ink); }
+
+  input[type=text], textarea{
+    font-family:'Gaegu', sans-serif;
+    font-size:1.02rem;
+    background:#FFFDF8;
+    border:2px solid #EFE7D6;
+    border-radius:16px;
+    padding:10px 14px;
+    width:100%;
+    transition:border-color .15s, box-shadow .15s;
+    color:var(--ink);
+  }
+  input[type=text]:focus, textarea:focus{
+    outline:none;
+    border-color:var(--sky-deep);
+    box-shadow: 0 0 0 4px rgba(111,184,222,0.18);
+  }
+  input.err, textarea.err{
+    border-color:var(--coral-deep) !important;
+    box-shadow: 0 0 0 4px rgba(241,120,94,0.15) !important;
+  }
+
+  .chip{
+    display:inline-flex; align-items:center; gap:6px;
+    background:var(--sand); color:var(--ink);
+    border-radius:999px; padding:5px 12px 5px 14px;
+    font-weight:700; font-size:.92rem;
+    border:1px solid var(--sand-deep);
+  }
+  .chip button{ line-height:1; opacity:.6; }
+  .chip button:hover{ opacity:1; }
+
+  .cta-btn{
+    background: linear-gradient(180deg, var(--coral) 0%, var(--coral-deep) 100%);
+    box-shadow: 0 8px 0 #C85C45, 0 16px 30px -10px rgba(200,92,69,0.5);
+    transition: transform .08s ease, box-shadow .08s ease;
+  }
+  .cta-btn:active{ transform: translateY(6px); box-shadow: 0 2px 0 #C85C45, 0 8px 16px -8px rgba(200,92,69,0.5); }
+  .cta-btn:disabled{ opacity:.6; cursor:not-allowed; }
+
+  @keyframes floaty{ 0%,100%{ transform:translateY(0) rotate(var(--r,0deg)); } 50%{ transform:translateY(-10px) rotate(var(--r,0deg)); } }
+  .floaty{ animation: floaty 5s ease-in-out infinite; }
+
+  @keyframes pop-in{ from{ opacity:0; transform:scale(.9) translateY(10px);} to{ opacity:1; transform:scale(1) translateY(0);} }
+  .pop-in{ animation: pop-in .25s ease-out; }
+
+  @media (prefers-reduced-motion: reduce){
+    .floaty{ animation:none; }
+  }
+</style>
 </head>
-<body class="bg-grid-pattern min-h-screen flex flex-col justify-between selection:bg-sunflower-400 selection:text-white">
+<body class="wave-bg">
+<div id="root"></div>
 
-    <!-- Navigation Bar -->
-    <nav class="sticky top-0 z-40 glass-card border-b border-amber-200/60 shadow-sm transition-all duration-300">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-            <div class="flex items-center space-x-3">
-                <span class="p-2 bg-amber-500 text-white rounded-xl shadow-md flex items-center justify-center">
-                    <i class="fa-solid font-bold fa-butterfly text-lg"></i>
-                </span>
-                <div>
-                    <h1 class="font-black text-lg sm:text-xl text-charcoal-800 leading-tight">꽃들에게 희망을</h1>
-                    <p class="text-xs text-amber-700 font-medium hidden sm:block">고등학교 인문토론캠프</p>
-                </div>
-            </div>
+<script type="text/babel">
+const { useState, useRef } = React;
 
-            <div class="hidden md:flex items-center space-x-6 text-sm font-semibold text-gray-700">
-                <a href="#overview" class="hover:text-amber-600 transition-colors">캠프 안내</a>
-                <a href="#metaphor" class="hover:text-amber-600 transition-colors">1차시: 메타포 & 토론</a>
-                <a href="#balance" class="hover:text-amber-600 transition-colors">2차시: 밸런스 & 선언문</a>
-                <a href="#satisfaction" class="hover:text-amber-600 transition-colors">만족도 조사</a>
-            </div>
+/* ---------------- 아이콘 (동글동글 라인 스타일) ---------------- */
+const IconBase = ({ children, className, viewBox="0 0 24 24" }) => (
+  <svg viewBox={viewBox} className={className} fill="none" stroke="currentColor"
+       strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">{children}</svg>
+);
+const SunIcon = (p) => (
+  <IconBase {...p}>
+    <circle cx="12" cy="12" r="4.2"/>
+    <path d="M12 2.5v2.4M12 19.1v2.4M4.6 4.6l1.7 1.7M17.7 17.7l1.7 1.7M2.5 12h2.4M19.1 12h2.4M4.6 19.4l1.7-1.7M17.7 6.3l1.7-1.7"/>
+  </IconBase>
+);
+const WatermelonIcon = (p) => (
+  <IconBase {...p}>
+    <path d="M3 12a9 9 0 0 0 18 0c0-5-5-8-9-9.5C7.5 4 3 7 3 12Z"/>
+    <path d="M3 12a9 9 0 0 0 18 0" strokeDasharray="0"/>
+    <path d="M6 12a6 6 0 0 0 12 0"/>
+    <circle cx="10" cy="12.8" r=".55" fill="currentColor" stroke="none"/>
+    <circle cx="14.3" cy="12.5" r=".55" fill="currentColor" stroke="none"/>
+    <circle cx="12" cy="15.5" r=".55" fill="currentColor" stroke="none"/>
+  </IconBase>
+);
+const LeafIcon = (p) => (
+  <IconBase {...p}>
+    <path d="M4 20c8-1 13-6 15-15-9 1-14 6-15 15Z"/>
+    <path d="M6 18c3-4 6-7 12-11"/>
+  </IconBase>
+);
+const BookIcon = (p) => (
+  <IconBase {...p}>
+    <path d="M4 5.2c2.2-1.1 5-1.1 7 0v13.6c-2-1.1-4.8-1.1-7 0V5.2Z"/>
+    <path d="M20 5.2c-2.2-1.1-5-1.1-7 0v13.6c2-1.1 4.8-1.1 7 0V5.2Z"/>
+  </IconBase>
+);
+const PencilIcon = (p) => (
+  <IconBase {...p}>
+    <path d="M14.3 4.8 19 9.5 8.2 20.3 3.6 21l.6-4.6L14.3 4.8Z"/>
+    <path d="M12.6 6.5 17.3 11.2"/>
+  </IconBase>
+);
+const PalmIcon = (p) => (
+  <IconBase {...p}>
+    <path d="M12 21V11"/>
+    <path d="M12 11c-2-3-6-3-8-1 3 1 4 2 5 3.5"/>
+    <path d="M12 11c2-3 6-3 8-1-3 1-4 2-5 3.5"/>
+    <path d="M12 11c-1-3 0-6 2.5-8"/>
+    <path d="M12 11c1-3 0-6-2.5-8"/>
+  </IconBase>
+);
+const DropletIcon = (p) => (
+  <IconBase {...p}>
+    <path d="M12 3c3.5 4.2 6 7.6 6 10.7A6 6 0 1 1 6 13.7C6 10.6 8.5 7.2 12 3Z"/>
+  </IconBase>
+);
+const TagIconSmall = (p) => (
+  <IconBase {...p}>
+    <path d="M11 4h5.5L20 7.5V13l-9 9-9-9 9-9Z"/>
+    <circle cx="14.5" cy="8.5" r="1"/>
+  </IconBase>
+);
 
-            <div class="flex items-center space-x-2">
-                <button onclick="openSheetUrlModal()" class="flex items-center space-x-1.5 bg-amber-100 hover:bg-amber-200 text-amber-800 border border-amber-300 px-3 py-1.5 rounded-xl text-xs font-bold transition-all">
-                    <i class="fa-solid fa-file-excel text-emerald-600"></i>
-                    <span id="sheetStatusLabel">구글 시트 연동 설정</span>
-                </button>
+/* ---------------- 작은 UI 부품 ---------------- */
+const Field = ({ label, required, hint, children }) => (
+  <div className="mb-5">
+    <label className="field-label text-[1.02rem] flex items-baseline gap-1 mb-1.5">
+      {label}{required && <span style={{color:'var(--coral-deep)'}}>*</span>}
+    </label>
+    {hint && <p className="text-sm mb-1.5" style={{color:'var(--ink-soft)'}}>{hint}</p>}
+    {children}
+  </div>
+);
 
-                <button onclick="openWorksheetModal()" class="flex items-center space-x-2 bg-gradient-to-r from-leaf-500 to-leaf-600 hover:from-leaf-600 hover:to-leaf-700 text-white px-3.5 py-1.5 rounded-xl text-xs sm:text-sm font-bold shadow-md hover:shadow-lg transition-all">
-                    <i class="fa-solid fa-file-signature"></i>
-                    <span>사전 활동지 작성</span>
-                </button>
-            </div>
-        </div>
-    </nav>
+const TextInput = ({ value, onChange, placeholder, error }) => (
+  <input type="text" className={error ? "err" : ""} value={value}
+         onChange={e => onChange(e.target.value)} placeholder={placeholder} />
+);
 
-    <!-- Hero Header -->
-    <header class="relative overflow-hidden bg-gradient-to-b from-amber-100/80 via-amber-50/50 to-transparent pt-8 pb-12 px-4 sm:px-6 lg:px-8">
-        <div class="absolute top-8 left-10 text-amber-400/40 text-4xl animate-float-slow pointer-events-none">
-            <i class="fa-solid fa-butterfly"></i>
-        </div>
-        <div class="absolute bottom-6 right-12 text-emerald-400/30 text-5xl animate-float-slow pointer-events-none" style="animation-delay: 2s;">
-            <i class="fa-solid fa-seedling"></i>
-        </div>
+const TextArea = ({ value, onChange, placeholder, rows=3, error }) => (
+  <textarea className={error ? "err" : ""} rows={rows} value={value}
+            onChange={e => onChange(e.target.value)} placeholder={placeholder} />
+);
 
-        <div class="max-w-4xl mx-auto text-center relative z-10">
-            <span class="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-800 border border-amber-300 shadow-sm mb-3">
-                <i class="fa-solid fa-book-open text-amber-600"></i>
-                Trina Paulus 《Hope for the Flowers》
+const SectionTab = ({ color, colorDeep, icon, label }) => (
+  <div className="bookmark-tab -mb-1" style={{ background: color, color: colorDeep }}>
+    <span style={{color:'#fff'}}>{icon}</span>
+    <span style={{color:'#fff'}}>{label}</span>
+  </div>
+);
+
+const StageCard = ({ tabColor, tabColorDeep, icon, tabLabel, title, subtitle, children }) => (
+  <section className="mb-10">
+    <div style={{ color: tabColorDeep }}>
+      <div className="bookmark-tab" style={{ background: tabColor }}>
+        <span className="text-white w-5 h-5">{icon}</span>
+        <span className="text-white">{tabLabel}</span>
+      </div>
+    </div>
+    <div className="cute-card p-6 sm:p-8 pt-8">
+      <h2 className="font-cute text-xl sm:text-2xl mb-1" style={{color: tabColorDeep}}>{title}</h2>
+      {subtitle && <p className="text-sm mb-6" style={{color:'var(--ink-soft)'}}>{subtitle}</p>}
+      {children}
+    </div>
+  </section>
+);
+
+const SubBlock = ({ number, title, color, children }) => (
+  <div className="mb-8 last:mb-0">
+    <div className="flex items-center gap-2 mb-4">
+      <span className="w-7 h-7 rounded-full flex items-center justify-center text-white text-sm font-bold shrink-0"
+            style={{ background: color }}>{number}</span>
+      <h3 className="font-cute text-lg" style={{color:'var(--ink)'}}>{title}</h3>
+    </div>
+    <div className="pl-0 sm:pl-9">{children}</div>
+  </div>
+);
+
+/* ---------------- 태그(핵심 단어) 입력 ---------------- */
+function TagInput({ tags, setTags, error }){
+  const [draft, setDraft] = useState("");
+  const add = () => {
+    const v = draft.trim();
+    if(!v) return;
+    if(!tags.includes(v)) setTags([...tags, v]);
+    setDraft("");
+  };
+  return (
+    <div>
+      <div className="flex gap-2">
+        <input type="text" className={error ? "err" : ""} value={draft}
+               placeholder="핵심 단어를 입력하고 Enter ↵"
+               onChange={e=>setDraft(e.target.value)}
+               onKeyDown={e=>{ if(e.key==='Enter'){ e.preventDefault(); add(); } }} />
+        <button type="button" onClick={add}
+                className="shrink-0 px-4 rounded-2xl font-head font-bold text-white"
+                style={{background:'var(--green-deep)'}}>+ 추가</button>
+      </div>
+      {tags.length>0 &&
+        <div className="flex flex-wrap gap-2 mt-3">
+          {tags.map((t,i)=>(
+            <span key={i} className="chip">
+              <TagIconSmall className="w-3.5 h-3.5" />
+              {t}
+              <button type="button" onClick={()=>setTags(tags.filter((_,idx)=>idx!==i))}>✕</button>
             </span>
-
-            <h1 class="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-charcoal-800 tracking-tight leading-snug mb-2">
-                애벌레의 탑을 넘어, 
-                <span class="text-transparent bg-clip-text bg-gradient-to-r from-amber-600 via-amber-500 to-emerald-600 inline-block">
-                    나만의 날개를 펼쳐라!
-                </span>
-            </h1>
-
-            <p class="text-xs sm:text-sm text-gray-600 max-w-2xl mx-auto mb-6 leading-relaxed">
-                우리는 무작정 위로만 오르고 있는 것은 아닐까요? 애벌레 기둥에서의 무한 경쟁을 돌아보고,<br>
-                참된 나만의 고치를 틀어 날아오를 준비를 시작합니다.
-            </p>
-
-            <!-- Dynamic Timer Component -->
-            <div class="max-w-xl mx-auto bg-white/95 rounded-2xl shadow-xl p-4 sm:p-5 border border-amber-200">
-                <div class="flex items-center justify-between border-b border-gray-100 pb-3 mb-3">
-                    <div class="flex items-center space-x-2">
-                        <span id="timerSessionBadge" class="px-2.5 py-1 rounded-md text-xs font-bold bg-amber-500 text-white">1차시 진행 중</span>
-                        <span id="timerTitle" class="text-xs sm:text-sm font-bold text-gray-700">경쟁의 기둥을 묻다</span>
-                    </div>
-                    <div class="flex space-x-1">
-                        <button onclick="switchSession(1)" id="btnSession1" class="px-2 py-1 text-xs rounded font-medium bg-amber-100 text-amber-800 hover:bg-amber-200">1차시</button>
-                        <button onclick="switchSession(2)" id="btnSession2" class="px-2 py-1 text-xs rounded font-medium bg-gray-100 text-gray-600 hover:bg-gray-200">2차시</button>
-                    </div>
-                </div>
-
-                <div class="flex items-center justify-center space-x-4">
-                    <div class="text-center">
-                        <div id="timerMinutes" class="text-4xl sm:text-5xl font-black font-mono text-amber-600 tracking-tight">50</div>
-                        <span class="text-[10px] font-semibold text-gray-400 uppercase">Minutes</span>
-                    </div>
-                    <span class="text-3xl sm:text-4xl font-black text-amber-300 mb-3">:</span>
-                    <div class="text-center">
-                        <div id="timerSeconds" class="text-4xl sm:text-5xl font-black font-mono text-amber-600 tracking-tight">00</div>
-                        <span class="text-[10px] font-semibold text-gray-400 uppercase">Seconds</span>
-                    </div>
-                </div>
-
-                <!-- Custom Time Input Form -->
-                <div class="mt-3 pt-3 border-t border-gray-100 flex items-center justify-center gap-2 text-xs">
-                    <span class="font-bold text-gray-500">시간 직접 설정:</span>
-                    <input type="number" id="customMinInput" min="0" max="180" value="50" class="w-14 px-2 py-1 border border-gray-300 rounded-lg text-center font-bold focus:ring-1 focus:ring-amber-500 focus:outline-none">
-                    <span class="text-gray-500">분</span>
-                    <input type="number" id="customSecInput" min="0" max="59" value="0" class="w-14 px-2 py-1 border border-gray-300 rounded-lg text-center font-bold focus:ring-1 focus:ring-amber-500 focus:outline-none">
-                    <span class="text-gray-500">초</span>
-                    <button onclick="applyCustomTime()" class="px-3 py-1 bg-amber-100 hover:bg-amber-200 text-amber-800 font-bold rounded-lg transition-colors">
-                        적용
-                    </button>
-                </div>
-
-                <div class="flex justify-center items-center space-x-3 mt-4">
-                    <button id="btnTimerStart" onclick="toggleTimer()" class="flex items-center space-x-2 bg-amber-500 hover:bg-amber-600 text-white px-5 py-2 rounded-xl font-bold text-xs sm:text-sm shadow-md transition-all active:scale-95">
-                        <i id="timerIcon" class="fa-solid fa-play"></i>
-                        <span id="timerBtnText">타이머 시작</span>
-                    </button>
-                    <button onclick="resetTimer()" class="flex items-center space-x-1 bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-xl font-bold text-xs sm:text-sm transition-all">
-                        <i class="fa-solid fa-rotate-left"></i>
-                        <span>초기화</span>
-                    </button>
-                </div>
-            </div>
+          ))}
         </div>
-    </header>
-
-    <!-- Main Content Container -->
-    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-20 py-8">
-
-        <!-- SECTION 1: Camp Overview & Timeline -->
-        <section id="overview" class="scroll-mt-24">
-            <div class="text-center max-w-2xl mx-auto mb-10">
-                <h2 class="text-xs font-bold text-amber-600 uppercase tracking-widest mb-1">Camp Roadmap</h2>
-                <h3 class="text-2xl sm:text-3xl font-bold text-gray-900">2차시 토론 캠프 프로그램</h3>
-                <p class="text-sm text-gray-500 mt-2">100분 동안 펼쳐지는 생각의 깊이를 더하는 여정입니다.</p>
-            </div>
-
-            <div class="grid md:grid-cols-2 gap-6 lg:gap-8">
-                <!-- Timeline Card 1 -->
-                <div class="bg-white rounded-3xl p-6 sm:p-8 shadow-md border border-amber-100 hover:shadow-xl transition-all duration-300 relative overflow-hidden group">
-                    <div class="absolute top-0 right-0 w-32 h-32 bg-amber-50 rounded-bl-full -z-0 group-hover:scale-110 transition-transform"></div>
-                    <div class="relative z-10">
-                        <div class="flex justify-between items-start mb-4">
-                            <span class="px-3 py-1 bg-amber-500 text-white text-xs font-black rounded-full shadow-sm">1차시 | 50 min</span>
-                            <i class="fa-solid fa-layer-group text-3xl text-amber-400"></i>
-                        </div>
-                        <h4 class="text-xl font-bold text-gray-900 mb-2">경쟁의 기둥을 묻다</h4>
-                        <p class="text-sm text-gray-600 mb-4 leading-relaxed">
-                            상징에 담긴 내포적 의미를 파악하고, 목적 없이 위로만 향하는 '애벌레 기둥'의 무한 경쟁 시스템 속 의미를 분석합니다.
-                        </p>
-                        <ul class="text-xs text-gray-500 space-y-2 border-t border-gray-100 pt-4">
-                            <li class="flex items-center"><i class="fa-solid fa-check text-amber-500 mr-2"></i>작품 속 핵심 상징(기둥, 고치, 나비) 재정의</li>
-                            <li class="flex items-center"><i class="fa-solid fa-check text-amber-500 mr-2"></i>[토론] 목적 없는 무한 경쟁도 가치가 있는가?</li>
-                            <li class="flex items-center"><i class="fa-solid fa-check text-amber-500 mr-2"></i>실시간 찬반 투표 및 입체적 근거 작성</li>
-                        </ul>
-                    </div>
-                </div>
-
-                <!-- Timeline Card 2 -->
-                <div class="bg-white rounded-3xl p-6 sm:p-8 shadow-md border border-emerald-100 hover:shadow-xl transition-all duration-300 relative overflow-hidden group">
-                    <div class="absolute top-0 right-0 w-32 h-32 bg-emerald-50 rounded-bl-full -z-0 group-hover:scale-110 transition-transform"></div>
-                    <div class="relative z-10">
-                        <div class="flex justify-between items-start mb-4">
-                            <span class="px-3 py-1 bg-emerald-500 text-white text-xs font-black rounded-full shadow-sm">2차시 | 50 min</span>
-                            <i class="fa-solid fa-feather-pointed text-3xl text-emerald-400"></i>
-                        </div>
-                        <h4 class="text-xl font-bold text-gray-900 mb-2">나만의 고치를 틀다</h4>
-                        <p class="text-sm text-gray-600 mb-4 leading-relaxed">
-                            호랑과 노랑 애벌레의 서로 다른 선택을 통해 삶의 방향성을 성찰하고, 내가 벗어날 허물과 새로 펼칠 날개를 선언합니다.
-                        </p>
-                        <ul class="text-xs text-gray-500 space-y-2 border-t border-gray-100 pt-4">
-                            <li class="flex items-center"><i class="fa-solid fa-check text-emerald-500 mr-2"></i>[가치관 밸런스 게임] 내부 개혁 vs 외부 변혁</li>
-                            <li class="flex items-center"><i class="fa-solid fa-check text-emerald-500 mr-2"></i>디지털 '나만의 고치 선언문' 작성</li>
-                            <li class="flex items-center"><i class="fa-solid fa-check text-emerald-500 mr-2"></i>실시간 날개 갤러리 공유 & 만족도 조사</li>
-                        </ul>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Quick Worksheet Banner -->
-            <div class="mt-8 bg-gradient-to-r from-amber-500 via-amber-600 to-emerald-600 rounded-2xl p-6 text-white shadow-lg flex flex-col sm:flex-row items-center justify-between gap-4">
-                <div class="flex items-center space-x-4">
-                    <div class="w-12 h-12 bg-white/20 rounded-2xl flex items-center justify-center shrink-0 text-xl">
-                        <i class="fa-solid fa-clipboard-check"></i>
-                    </div>
-                    <div>
-                        <h4 class="font-bold text-base sm:text-lg">사전 읽기 활동지를 준비하셨나요?</h4>
-                        <p class="text-xs text-amber-100">책을 읽고 정리한 나만의 생각과 인터뷰 질문을 입력하면 캠프 토론에 바로 반영됩니다.</p>
-                    </div>
-                </div>
-                <button onclick="openWorksheetModal()" class="w-full sm:w-auto px-5 py-2.5 bg-white text-amber-700 hover:bg-amber-50 font-bold rounded-xl text-sm transition-all shadow-md shrink-0">
-                    활동지 열기 / 확인
-                </button>
-            </div>
-        </section>
-
-        <!-- SECTION 2: 1차시 메타포 갤러리 & 입체 토론 -->
-        <section id="metaphor" class="scroll-mt-24">
-            <div class="text-center max-w-2xl mx-auto mb-10">
-                <span class="px-3 py-1 bg-amber-100 text-amber-800 text-xs font-bold rounded-full">1차시 핵심 활동</span>
-                <h3 class="text-2xl sm:text-3xl font-bold text-gray-900 mt-2">메타포 갤러리 & 입체 토론</h3>
-                <p class="text-sm text-gray-500 mt-1">상징을 정밀하게 분석하고, 경쟁의 의미에 대해 치열하게 토론해보세요.</p>
-            </div>
-
-            <!-- Metaphor Cards Grid -->
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-12">
-                <!-- Card 1 -->
-                <div onclick="openSymbolModal('애벌레 기둥')" class="bg-white rounded-2xl p-5 border border-amber-200/80 shadow-sm hover:shadow-md hover:-translate-y-1 transition-all cursor-pointer group">
-                    <div class="w-10 h-10 rounded-xl bg-amber-100 text-amber-600 flex items-center justify-center text-xl mb-3 group-hover:scale-110 transition-transform">
-                        <i class="fa-solid fa-cubes"></i>
-                    </div>
-                    <h4 class="font-bold text-gray-800 mb-1 flex items-center justify-between">
-                        <span>애벌레 기둥</span>
-                        <i class="fa-solid fa-plus text-xs text-amber-400"></i>
-                    </h4>
-                    <p class="text-xs text-gray-500 mb-3">무조건 꼭대기로 오르는 무한 경쟁 구조</p>
-                    <div id="symbol-count-1" class="text-[11px] font-semibold text-amber-700 bg-amber-50 px-2.5 py-1 rounded-md inline-block">
-                        해석 및 정의 보기
-                    </div>
-                </div>
-
-                <!-- Card 2 -->
-                <div onclick="openSymbolModal('노랑 애벌레')" class="bg-white rounded-2xl p-5 border border-amber-200/80 shadow-sm hover:shadow-md hover:-translate-y-1 transition-all cursor-pointer group">
-                    <div class="w-10 h-10 rounded-xl bg-yellow-100 text-yellow-600 flex items-center justify-center text-xl mb-3 group-hover:scale-110 transition-transform">
-                        <i class="fa-solid fa-worm"></i>
-                    </div>
-                    <h4 class="font-bold text-gray-800 mb-1 flex items-center justify-between">
-                        <span>노랑 애벌레</span>
-                        <i class="fa-solid fa-plus text-xs text-amber-400"></i>
-                    </h4>
-                    <p class="text-xs text-gray-500 mb-3">내면의 소리와 사랑, 참된 가치를 묻는 존재</p>
-                    <div id="symbol-count-2" class="text-[11px] font-semibold text-amber-700 bg-amber-50 px-2.5 py-1 rounded-md inline-block">
-                        해석 및 정의 보기
-                    </div>
-                </div>
-
-                <!-- Card 3 -->
-                <div onclick="openSymbolModal('고치')" class="bg-white rounded-2xl p-5 border border-amber-200/80 shadow-sm hover:shadow-md hover:-translate-y-1 transition-all cursor-pointer group">
-                    <div class="w-10 h-10 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center text-xl mb-3 group-hover:scale-110 transition-transform">
-                        <i class="fa-solid fa-egg"></i>
-                    </div>
-                    <h4 class="font-bold text-gray-800 mb-1 flex items-center justify-between">
-                        <span>고치 (Cocoon)</span>
-                        <i class="fa-solid fa-plus text-xs text-amber-400"></i>
-                    </h4>
-                    <p class="text-xs text-gray-500 mb-3">변화를 위한 고독한 기다림과 성장의 공간</p>
-                    <div id="symbol-count-3" class="text-[11px] font-semibold text-amber-700 bg-amber-50 px-2.5 py-1 rounded-md inline-block">
-                        해석 및 정의 보기
-                    </div>
-                </div>
-
-                <!-- Card 4 -->
-                <div onclick="openSymbolModal('나비')" class="bg-white rounded-2xl p-5 border border-emerald-200/80 shadow-sm hover:shadow-md hover:-translate-y-1 transition-all cursor-pointer group">
-                    <div class="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-600 flex items-center justify-center text-xl mb-3 group-hover:scale-110 transition-transform">
-                        <i class="fa-solid fa-butterfly"></i>
-                    </div>
-                    <h4 class="font-bold text-gray-800 mb-1 flex items-center justify-between">
-                        <span>나비 (Butterfly)</span>
-                        <i class="fa-solid fa-plus text-xs text-emerald-400"></i>
-                    </h4>
-                    <p class="text-xs text-gray-500 mb-3">진정한 자아 실현과 사랑을 나누는 삶</p>
-                    <div id="symbol-count-4" class="text-[11px] font-semibold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-md inline-block">
-                        해석 및 정의 보기
-                    </div>
-                </div>
-            </div>
-
-            <!-- Debate Topic Card 1 -->
-            <div class="bg-white rounded-3xl p-6 sm:p-8 border border-amber-200 shadow-lg">
-                <div class="flex items-center space-x-2 text-amber-600 text-xs font-bold uppercase tracking-wider mb-2">
-                    <i class="fa-solid fa-comments"></i>
-                    <span>1차시 토론 논제</span>
-                </div>
-                <h3 class="text-xl sm:text-2xl font-bold text-gray-900 mb-4 leading-snug">
-                    "목적을 알 수 없는 무한 경쟁(애벌레 기둥) 속에서도, 올라가는 과정 자체에 의미가 있는가?"
-                </h3>
-                <p class="text-xs sm:text-sm text-gray-600 mb-6 bg-amber-50/60 p-4 rounded-xl border border-amber-100">
-                    <strong class="text-amber-800">배경:</strong> 호랑 애벌레는 기둥 꼭대기에 무엇이 있는지 모르면서도 남을 밟고 계속 올라갑니다. 입시와 성과 중심의 우리 현실에서 이 경쟁은 단순히 허무한 것일까요, 아니면 역량을 단련하는 필요조건일까요?
-                </p>
-
-                <!-- Voting Section -->
-                <div class="grid md:grid-cols-2 gap-8 items-center">
-                    <div>
-                        <h4 class="text-xs font-bold text-gray-500 uppercase mb-3">실시간 찬반 투표 참여</h4>
-                        <div class="space-y-3">
-                            <button onclick="castVote('pro')" id="btnVotePro" class="w-full flex items-center justify-between p-3.5 rounded-xl border-2 border-emerald-200 hover:border-emerald-500 hover:bg-emerald-50 text-left transition-all font-semibold text-sm">
-                                <span class="flex items-center text-emerald-800">
-                                    <i class="fa-solid fa-thumbs-up mr-2 text-emerald-600"></i>
-                                    찬성 (의미 있다: 성취감, 자기련성)
-                                </span>
-                                <span id="countVotePro" class="text-xs px-2 py-0.5 bg-emerald-100 text-emerald-800 rounded-full font-bold">0표</span>
-                            </button>
-
-                            <button onclick="castVote('con')" id="btnVoteCon" class="w-full flex items-center justify-between p-3.5 rounded-xl border-2 border-rose-200 hover:border-rose-500 hover:bg-rose-50 text-left transition-all font-semibold text-sm">
-                                <span class="flex items-center text-rose-800">
-                                    <i class="fa-solid fa-thumbs-down mr-2 text-rose-600"></i>
-                                    반대 (의미 없다: 타인 희생, 본질 상실)
-                                </span>
-                                <span id="countVoteCon" class="text-xs px-2 py-0.5 bg-rose-100 text-rose-800 rounded-full font-bold">0표</span>
-                            </button>
-                        </div>
-                    </div>
-
-                    <!-- Live Dynamic Poll Bar -->
-                    <div class="bg-gray-50 p-5 rounded-2xl border border-gray-200">
-                        <div class="flex justify-between text-xs font-bold text-gray-700 mb-2">
-                            <span>투표 결과 현황</span>
-                            <span id="totalVotesText">총 0명 참여</span>
-                        </div>
-                        <div class="h-6 w-full bg-gray-200 rounded-full overflow-hidden flex shadow-inner mb-3">
-                            <div id="barPro" class="bg-emerald-500 h-full text-[10px] text-white font-bold flex items-center justify-center transition-all duration-500" style="width: 50%;">찬성 50%</div>
-                            <div id="barCon" class="bg-rose-500 h-full text-[10px] text-white font-bold flex items-center justify-center transition-all duration-500" style="width: 50%;">반대 50%</div>
-                        </div>
-                        <p class="text-[11px] text-gray-400 text-center">버튼을 클릭하여 소중한 의견을 반영해 주세요.</p>
-                    </div>
-                </div>
-
-                <!-- Opinion Input & Send Buttons -->
-                <div class="mt-6 pt-6 border-t border-gray-100">
-                    <label class="block text-xs font-bold text-gray-700 mb-2">나의 주장 한 줄 근거 작성하기</label>
-                    <div class="flex flex-col sm:flex-row gap-2">
-                        <input type="text" id="inputDebateOpinion" placeholder="예: 목적이 명확하지 않은 경쟁은 타인을 해치고 자기 소외를 초래하기 때문이다." class="flex-1 px-4 py-2.5 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-amber-500 text-sm">
-                        <div class="flex gap-2">
-                            <button onclick="submitDebateOpinion()" class="px-4 py-2.5 bg-amber-500 hover:bg-amber-600 text-white font-bold text-xs rounded-xl shadow-md shrink-0">
-                                화면에 등록
-                            </button>
-                            <button onclick="sendDebateToSheet()" class="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-md shrink-0 flex items-center gap-1.5">
-                                <i class="fa-solid fa-paper-plane"></i>
-                                <span>전송하기</span>
-                            </button>
-                        </div>
-                    </div>
-                    <div id="opinionList" class="mt-4 space-y-2 max-h-40 overflow-y-auto pr-1">
-                        <!-- Dynamic opinion chips appear here -->
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- SECTION 3: 2차시 밸런스 게임 & 나만의 고치 선언문 -->
-        <section id="balance" class="scroll-mt-24">
-            <div class="text-center max-w-2xl mx-auto mb-10">
-                <span class="px-3 py-1 bg-emerald-100 text-emerald-800 text-xs font-bold rounded-full">2차시 핵심 활동</span>
-                <h3 class="text-2xl sm:text-3xl font-bold text-gray-900 mt-2">가치관 밸런스 게임 & 고치 선언문</h3>
-                <p class="text-sm text-gray-500 mt-1">내가 선택할 삶의 방식은 무엇이며, 어떤 날개를 갖고 싶나요?</p>
-            </div>
-
-            <!-- Balance Game -->
-            <div class="bg-gradient-to-br from-amber-50 to-emerald-50 rounded-3xl p-6 sm:p-8 border border-amber-200 mb-12 shadow-sm">
-                <div class="text-center mb-6">
-                    <span class="px-2.5 py-1 bg-amber-500 text-white text-[11px] font-extrabold rounded">가치관 VS 밸런스 게임</span>
-                    <h4 class="text-lg sm:text-xl font-bold text-gray-900 mt-2">
-                        당신이 애벌레라면 어떤 길을 선택하겠습니까?
-                    </h4>
-                </div>
-
-                <div class="grid md:grid-cols-2 gap-4">
-                    <!-- Choice A -->
-                    <div onclick="selectBalanceChoice('A')" id="cardChoiceA" class="bg-white p-6 rounded-2xl border-2 border-amber-300 hover:border-amber-500 cursor-pointer transition-all shadow-sm relative group">
-                        <div class="flex items-center space-x-3 mb-3">
-                            <span class="w-8 h-8 rounded-full bg-amber-500 text-white font-black flex items-center justify-center text-sm">A</span>
-                            <h5 class="font-bold text-gray-900">호랑 애벌레의 길 (내부 개혁형)</h5>
-                        </div>
-                        <p class="text-xs text-gray-600 leading-relaxed mb-4">
-                            "체제 안에서 끝까지 올라가 정상의 허무함을 직접 확인하고, 아직 아래에 있는 다른 애벌레들에게 진실을 알려주겠다."
-                        </p>
-                        <span class="text-[11px] font-bold text-amber-600 group-hover:underline">선택하기 →</span>
-                    </div>
-
-                    <!-- Choice B -->
-                    <div onclick="selectBalanceChoice('B')" id="cardChoiceB" class="bg-white p-6 rounded-2xl border-2 border-emerald-300 hover:border-emerald-500 cursor-pointer transition-all shadow-sm relative group">
-                        <div class="flex items-center space-x-3 mb-3">
-                            <span class="w-8 h-8 rounded-full bg-emerald-500 text-white font-black flex items-center justify-center text-sm">B</span>
-                            <h5 class="font-bold text-gray-900">노랑 애벌레의 길 (외부 변혁형)</h5>
-                        </div>
-                        <p class="text-xs text-gray-600 leading-relaxed mb-4">
-                            "체제(기둥)에서 미련 없이 내려와 자신의 내면으로 들어가 고치를 틀고, 스스로 나비가 되는 본보기를 보여주겠다."
-                        </p>
-                        <span class="text-[11px] font-bold text-emerald-600 group-hover:underline">선택하기 →</span>
-                    </div>
-                </div>
-
-                <div id="balanceFeedback" class="mt-4 text-center text-xs font-bold text-amber-800 hidden">
-                    <!-- Selection result display -->
-                </div>
-            </div>
-
-            <!-- Digital Cocoon & Butterfly Declaration Generator -->
-            <div class="bg-white rounded-3xl p-6 sm:p-10 border border-emerald-200 shadow-xl">
-                <div class="max-w-3xl mx-auto">
-                    <div class="text-center mb-8">
-                        <div class="w-14 h-14 bg-emerald-100 text-emerald-600 rounded-2xl flex items-center justify-center text-2xl mx-auto mb-3 shadow-inner">
-                            <i class="fa-solid fa-wand-magic-sparkles"></i>
-                        </div>
-                        <h3 class="text-2xl font-bold text-gray-900">디지털 나만의 고치 선언문 작성기</h3>
-                        <p class="text-xs sm:text-sm text-gray-500 mt-1">내가 벗어던질 허물과 새로 펼칠 날개를 선언하고 나비로 탄생시키세요.</p>
-                    </div>
-
-                    <form id="butterflyForm" onsubmit="generateButterfly(event)" class="space-y-6">
-                        <div class="grid sm:grid-cols-2 gap-4">
-                            <div>
-                                <label class="block text-xs font-bold text-gray-700 mb-1">작성자 이름 / 학번</label>
-                                <input type="text" id="bfAuthor" required placeholder="예: 2학년 3반 홍길동" class="w-full px-4 py-2.5 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-emerald-500 text-sm">
-                            </div>
-                            <div>
-                                <label class="block text-xs font-bold text-gray-700 mb-1">나비 날개 상징 색상</label>
-                                <select id="bfColor" class="w-full px-4 py-2.5 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-emerald-500 text-sm">
-                                    <option value="from-amber-400 to-amber-600">황금빛 희망 (Yellow/Gold)</option>
-                                    <option value="from-emerald-400 to-teal-600">성장과 생명 (Green/Teal)</option>
-                                    <option value="from-sky-400 to-indigo-600">자유와 용기 (Blue/Indigo)</option>
-                                    <option value="from-rose-400 to-pink-600">사랑과 연대 (Rose/Pink)</option>
-                                </select>
-                            </div>
-                        </div>
-
-                        <div>
-                            <label class="block text-xs font-bold text-gray-700 mb-1">
-                                <i class="fa-solid fa-shield-halved text-amber-500 mr-1"></i>
-                                내가 벗어던질 애벌레 허물 (버리고 싶은 관성/집착)
-                            </label>
-                            <input type="text" id="bfOldShed" required placeholder="예: 남과의 끊임없는 비교, 성적에만 집착하던 불안감" class="w-full px-4 py-2.5 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-amber-500 text-sm">
-                        </div>
-
-                        <div>
-                            <label class="block text-xs font-bold text-gray-700 mb-1">
-                                <i class="fa-solid fa-butterfly text-emerald-500 mr-1"></i>
-                                내가 새롭게 펼칠 나비 날개 (나의 소망과 포부)
-                            </label>
-                            <input type="text" id="bfNewWing" required placeholder="예: 타인의 속도에 휩쓸리지 않고 나만의 꿈을 사랑으로 가꾸기" class="w-full px-4 py-2.5 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-emerald-500 text-sm">
-                        </div>
-
-                        <div class="flex flex-col sm:flex-row gap-3 pt-2">
-                            <button type="submit" class="flex-1 py-3.5 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white font-extrabold rounded-xl shadow-lg transition-all flex items-center justify-center space-x-2 text-sm">
-                                <i class="fa-solid fa-wand-magic-sparkles"></i>
-                                <span>화면에 나비 생성하기</span>
-                            </button>
-                            <button type="button" onclick="sendButterflyToSheet()" class="px-5 py-3.5 bg-emerald-700 hover:bg-emerald-800 text-white font-bold rounded-xl shadow-lg transition-all flex items-center justify-center space-x-2 text-sm">
-                                <i class="fa-solid fa-paper-plane"></i>
-                                <span>전송하기</span>
-                            </button>
-                        </div>
-                    </form>
-                </div>
-
-                <!-- Butterfly Sky Wall Gallery -->
-                <div class="mt-12 pt-8 border-t border-gray-100">
-                    <div class="flex items-center justify-between mb-6">
-                        <h4 class="font-bold text-gray-800 flex items-center">
-                            <i class="fa-solid fa-cloud-sun text-amber-500 mr-2"></i>
-                            우리들의 희망 나비 갤러리 (Live Butterfly Wall)
-                        </h4>
-                        <span id="butterflyCount" class="text-xs font-bold px-2.5 py-1 bg-emerald-100 text-emerald-800 rounded-full">
-                            0마리 탄생
-                        </span>
-                    </div>
-
-                    <div id="butterflyGallery" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 min-h-[160px]">
-                        <!-- Dynamic Butterfly cards rendered here -->
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- SECTION 4: Expandable Satisfaction Survey Section -->
-        <section id="satisfaction" class="scroll-mt-24">
-            <div class="bg-gradient-to-r from-amber-500 via-amber-600 to-emerald-600 p-0.5 rounded-3xl shadow-xl overflow-hidden transition-all duration-300">
-                <div class="bg-white rounded-[23px] overflow-hidden">
-                    
-                    <!-- Accordion Trigger Header -->
-                    <button onclick="toggleSatisfactionSurvey()" class="w-full p-6 sm:p-8 text-left bg-gradient-to-br from-amber-50/80 via-white to-emerald-50/80 hover:bg-amber-100/50 transition-all flex items-center justify-between group focus:outline-none">
-                        <div class="flex items-center space-x-4">
-                            <div class="w-12 h-12 rounded-2xl bg-gradient-to-tr from-amber-500 to-emerald-500 text-white flex items-center justify-center text-2xl shadow-md group-hover:scale-110 transition-transform">
-                                <i class="fa-solid fa-square-poll-vertical"></i>
-                            </div>
-                            <div>
-                                <span class="inline-block px-2.5 py-0.5 rounded-full text-[11px] font-extrabold bg-amber-100 text-amber-800 border border-amber-200 mb-1">
-                                    캠프 피드백
-                                </span>
-                                <h3 class="text-xl sm:text-2xl font-bold text-gray-900 group-hover:text-amber-700 transition-colors">
-                                    인문토론캠프 만족도 조사
-                                </h3>
-                                <p class="text-xs sm:text-sm text-gray-500 mt-0.5">
-                                    여기를 클릭하여 오늘 캠프 활동 소감과 만족도를 들려주세요.
-                                </p>
-                            </div>
-                        </div>
-
-                        <div class="flex items-center space-x-3 shrink-0">
-                            <span id="surveyBadgeState" class="text-xs font-bold px-3 py-1.5 rounded-xl bg-amber-500 text-white shadow-sm">
-                                클릭하여 설문 열기
-                            </span>
-                            <div class="w-10 h-10 rounded-xl bg-white border border-gray-200 flex items-center justify-center text-gray-500 group-hover:text-amber-600 group-hover:border-amber-300 transition-all">
-                                <i id="surveyToggleIcon" class="fa-solid fa-chevron-down text-base transition-transform duration-300"></i>
-                            </div>
-                        </div>
-                    </button>
-
-                    <!-- Expandable Form Content -->
-                    <div id="surveyContent" class="hidden border-t border-gray-100 bg-white p-6 sm:p-10 animate-rise-up">
-                        <form onsubmit="submitSatisfactionSurvey(event)" class="max-w-3xl mx-auto space-y-8">
-                            
-                            <!-- Rating Question -->
-                            <div class="bg-amber-50/50 p-5 rounded-2xl border border-amber-100">
-                                <label class="block text-sm font-bold text-gray-800 mb-2">
-                                    1. 오늘 《꽃들에게 희망을》 인문토론캠프의 전반적인 만족도는 어떠셨나요?
-                                </label>
-                                <div class="grid grid-cols-2 sm:grid-cols-5 gap-2.5 mt-3">
-                                    <button type="button" onclick="selectSurveyRating(5)" id="rateBtn-5" class="survey-rate-btn p-3 rounded-xl border-2 border-gray-200 hover:border-amber-400 bg-white text-center transition-all">
-                                        <div class="text-amber-500 text-lg mb-1"><i class="fa-solid fa-face-laugh-beam"></i></div>
-                                        <div class="text-xs font-bold text-gray-800">매우 만족</div>
-                                        <div class="text-[10px] text-gray-400">⭐⭐⭐⭐⭐</div>
-                                    </button>
-                                    <button type="button" onclick="selectSurveyRating(4)" id="rateBtn-4" class="survey-rate-btn p-3 rounded-xl border-2 border-gray-200 hover:border-amber-400 bg-white text-center transition-all">
-                                        <div class="text-emerald-500 text-lg mb-1"><i class="fa-solid fa-face-smile"></i></div>
-                                        <div class="text-xs font-bold text-gray-800">만족</div>
-                                        <div class="text-[10px] text-gray-400">⭐⭐⭐⭐</div>
-                                    </button>
-                                    <button type="button" onclick="selectSurveyRating(3)" id="rateBtn-3" class="survey-rate-btn p-3 rounded-xl border-2 border-gray-200 hover:border-amber-400 bg-white text-center transition-all">
-                                        <div class="text-yellow-600 text-lg mb-1"><i class="fa-solid fa-face-meh"></i></div>
-                                        <div class="text-xs font-bold text-gray-800">보통</div>
-                                        <div class="text-[10px] text-gray-400">⭐⭐⭐</div>
-                                    </button>
-                                    <button type="button" onclick="selectSurveyRating(2)" id="rateBtn-2" class="survey-rate-btn p-3 rounded-xl border-2 border-gray-200 hover:border-amber-400 bg-white text-center transition-all">
-                                        <div class="text-orange-500 text-lg mb-1"><i class="fa-solid fa-face-frown"></i></div>
-                                        <div class="text-xs font-bold text-gray-800">아쉬움</div>
-                                        <div class="text-[10px] text-gray-400">⭐⭐</div>
-                                    </button>
-                                    <button type="button" onclick="selectSurveyRating(1)" id="rateBtn-1" class="survey-rate-btn p-3 rounded-xl border-2 border-gray-200 hover:border-amber-400 bg-white text-center transition-all">
-                                        <div class="text-rose-500 text-lg mb-1"><i class="fa-solid fa-face-sad-tear"></i></div>
-                                        <div class="text-xs font-bold text-gray-800">매우 아쉬움</div>
-                                        <div class="text-[10px] text-gray-400">⭐</div>
-                                    </button>
-                                </div>
-                            </div>
-
-                            <!-- Best Activity Question -->
-                            <div class="bg-emerald-50/50 p-5 rounded-2xl border border-emerald-100">
-                                <label class="block text-sm font-bold text-gray-800 mb-2">
-                                    2. 가장 인상 깊었거나 유익했던 세부 활동은 무엇인가요?
-                                </label>
-                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-3">
-                                    <label class="flex items-center p-3 rounded-xl bg-white border border-gray-200 cursor-pointer hover:border-emerald-400 transition-all text-xs font-semibold">
-                                        <input type="radio" name="bestActivity" value="1차시 메타포 갤러리 및 상징 분석" class="text-emerald-600 focus:ring-emerald-500 mr-2.5">
-                                        <span>1차시 메타포 갤러리 및 상징 분석</span>
-                                    </label>
-                                    <label class="flex items-center p-3 rounded-xl bg-white border border-gray-200 cursor-pointer hover:border-emerald-400 transition-all text-xs font-semibold">
-                                        <input type="radio" name="bestActivity" value="1차시 입체 토론 및 찬반 실시간 투표" class="text-emerald-600 focus:ring-emerald-500 mr-2.5">
-                                        <span>1차시 입체 토론 및 찬반 실시간 투표</span>
-                                    </label>
-                                    <label class="flex items-center p-3 rounded-xl bg-white border border-gray-200 cursor-pointer hover:border-emerald-400 transition-all text-xs font-semibold">
-                                        <input type="radio" name="bestActivity" value="2차시 가치관 VS 밸런스 게임" class="text-emerald-600 focus:ring-emerald-500 mr-2.5">
-                                        <span>2차시 가치관 VS 밸런스 게임</span>
-                                    </label>
-                                    <label class="flex items-center p-3 rounded-xl bg-white border border-gray-200 cursor-pointer hover:border-emerald-400 transition-all text-xs font-semibold">
-                                        <input type="radio" name="bestActivity" value="2차시 디지털 고치 선언문 & 희망 나비 갤러리" class="text-emerald-600 focus:ring-emerald-500 mr-2.5">
-                                        <span>2차시 고치 선언문 & 나비 갤러리</span>
-                                    </label>
-                                </div>
-                            </div>
-
-                            <!-- Open Feedback Question -->
-                            <div>
-                                <label class="block text-xs font-bold text-gray-700 mb-1">
-                                    3. 캠프 소감 및 앞으로 개선되었으면 하는 의견을 자유롭게 적어주세요.
-                                </label>
-                                <textarea id="surveyFeedback" rows="3" placeholder="예: 친구들의 다양한 생각을 실시간으로 볼 수 있어서 인상 깊었습니다. 다음에도 참여하고 싶습니다." class="w-full p-3.5 border border-gray-300 rounded-xl text-xs focus:ring-2 focus:ring-amber-500 focus:outline-none"></textarea>
-                            </div>
-
-                            <!-- Participant Info & Action Buttons -->
-                            <div class="flex flex-col sm:flex-row items-center justify-between gap-4 pt-4 border-t border-gray-100">
-                                <div class="w-full sm:w-auto flex items-center space-x-2">
-                                    <input type="text" id="surveyAuthor" placeholder="작성자 이름 / 학번 (선택)" class="w-full sm:w-60 px-3.5 py-2 border border-gray-300 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-amber-500">
-                                </div>
-
-                                <div class="w-full sm:w-auto flex gap-2">
-                                    <button type="submit" class="flex-1 sm:flex-initial px-6 py-2.5 bg-gradient-to-r from-amber-500 to-emerald-600 hover:from-amber-600 hover:to-emerald-700 text-white font-extrabold text-xs rounded-xl shadow-md transition-all">
-                                        만족도 제출하기
-                                    </button>
-                                </div>
-                            </div>
-
-                        </form>
-                    </div>
-
-                </div>
-            </div>
-        </section>
-
-    </main>
-
-    <!-- MODAL 1: Pre-reading Worksheet Modal -->
-    <div id="worksheetModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
-        <div class="bg-white rounded-3xl max-w-2xl w-full max-h-[90vh] overflow-y-auto p-6 sm:p-8 shadow-2xl relative animate-rise-up">
-            <button onclick="closeWorksheetModal()" class="absolute top-5 right-5 text-gray-400 hover:text-gray-600 text-lg w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center">
-                <i class="fa-solid fa-xmark"></i>
-            </button>
-
-            <div class="flex items-center space-x-3 mb-6 border-b border-gray-100 pb-4">
-                <div class="p-3 bg-amber-100 text-amber-700 rounded-xl">
-                    <i class="fa-solid fa-book-bookmark text-xl"></i>
-                </div>
-                <div>
-                    <h3 class="text-xl font-bold text-gray-900">사전 활동지 작성 / 제출</h3>
-                    <p class="text-xs text-gray-500">《꽃들에게 희망을》 읽고 깊이 있게 정리한 내용</p>
-                </div>
-            </div>
-
-            <form onsubmit="saveWorksheet(event)" class="space-y-5">
-                <div class="grid sm:grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-xs font-bold text-gray-700 mb-1">작성자 이름/학번</label>
-                        <input type="text" id="wsAuthor" required placeholder="예: 2학년 1반 홍길동" class="w-full p-2.5 border border-gray-300 rounded-xl text-xs focus:ring-2 focus:ring-amber-500 focus:outline-none">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-bold text-gray-700 mb-1">제출 일자</label>
-                        <input type="text" id="wsDate" readonly class="w-full p-2.5 bg-gray-50 border border-gray-200 rounded-xl text-xs text-gray-500 font-mono">
-                    </div>
-                </div>
-
-                <div>
-                    <label class="block text-xs font-bold text-gray-700 mb-1">[활동 1] 나만의 명장면 & 인상 깊은 문장</label>
-                    <textarea id="wsScene" rows="2" placeholder="예: 노랑 애벌레가 기둥을 내려와 자신의 고치를 틀기로 결심하는 장면..." class="w-full p-3 border border-gray-300 rounded-xl text-xs focus:ring-2 focus:ring-amber-500 focus:outline-none"></textarea>
-                </div>
-
-                <div>
-                    <label class="block text-xs font-bold text-gray-700 mb-1">[활동 2] 등장인물에게 묻고 싶은 질문 (호랑 / 노랑 애벌레 등)</label>
-                    <input type="text" id="wsQuestion" placeholder="예: 호랑 애벌레야, 꼭대기에서 아무것도 없음을 깨달았을 때 가장 먼저 든 생각은 뭐였니?" class="w-full p-3 border border-gray-300 rounded-xl text-xs focus:ring-2 focus:ring-amber-500 focus:outline-none">
-                </div>
-
-                <div>
-                    <label class="block text-xs font-bold text-gray-700 mb-1">[활동 3] 나만의 상징 정의 (애벌레 기둥의 의미)</label>
-                    <input type="text" id="wsSymbolDef" placeholder="예: 남들에게 뒤처지지 않기 위해 억지로 버티는 입시 경쟁 체제" class="w-full p-3 border border-gray-300 rounded-xl text-xs focus:ring-2 focus:ring-amber-500 focus:outline-none">
-                </div>
-
-                <div class="pt-4 flex flex-wrap justify-end gap-2 border-t border-gray-100">
-                    <button type="button" onclick="closeWorksheetModal()" class="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-bold rounded-xl">닫기</button>
-                    <button type="submit" class="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold rounded-xl shadow-md">화면에 저장</button>
-                    <button type="button" onclick="sendWorksheetToSheet()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl shadow-md flex items-center gap-1.5">
-                        <i class="fa-solid fa-paper-plane"></i>
-                        <span>전송하기</span>
-                    </button>
-                </div>
-            </form>
-        </div>
+      }
     </div>
+  );
+}
 
-    <!-- MODAL 2: Symbol Detail Modal -->
-    <div id="symbolModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
-        <div class="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl relative animate-rise-up">
-            <button onclick="closeSymbolModal()" class="absolute top-5 right-5 text-gray-400 hover:text-gray-600 text-lg">
-                <i class="fa-solid fa-xmark"></i>
-            </button>
+/* ---------------- 메인 앱 ---------------- */
 
-            <h3 id="symbolModalTitle" class="text-xl font-bold text-gray-900 mb-2">상징 명칭</h3>
-            <p class="text-xs text-gray-500 mb-4">학생들이 함께 정의한 다채로운 해석입니다.</p>
+// ⚠️ 선생님용 설정: 구글 앱스 스크립트(Google Apps Script) 웹앱 배포 URL을 아래에 넣어주세요.
+// Google Sheets 확장 프로그램 > Apps Script 에서 doPost(e) 함수를 작성하고
+// "배포 > 웹 앱으로 배포"한 뒤 생성되는 URL을 여기에 붙여넣으면 됩니다.
+const WEBHOOK_URL = "https://script.google.com/macros/s/AKfycbyMNg4Uu9eGdZPCDI_iVEGVEvTSBYZ7tCzzHkYz2XrRNMyEdpUFu9k1dYXVSFJUnQ9lzg/exec";
 
-            <div id="symbolModalList" class="space-y-2 max-h-52 overflow-y-auto mb-4 p-2 bg-amber-50/50 rounded-xl border border-amber-100 text-xs">
-                <!-- Dynamic student interpretations -->
-            </div>
+async function sendToGoogleSheet(payload){
+  // Apps Script 웹앱은 보통 CORS 응답 헤더를 주지 않기 때문에 no-cors 모드로 전송합니다.
+  // no-cors 모드에서는 응답 내용을 읽을 수 없어, 네트워크 예외가 없으면 전송 성공으로 간주합니다.
+  await fetch(WEBHOOK_URL, {
+    method: "POST",
+    mode: "no-cors",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+}
 
-            <div class="space-y-2 pt-2 border-t border-gray-100">
-                <label class="block text-xs font-bold text-gray-700">나만의 새로운 해석 추가하기</label>
-                <div class="flex gap-2">
-                    <input type="text" id="inputNewSymbolDef" placeholder="자신의 정의를 적어주세요." class="flex-1 px-3 py-2 border border-gray-300 rounded-xl text-xs focus:ring-2 focus:ring-amber-500 focus:outline-none">
-                    <button onclick="addSymbolDefinition()" class="px-3 py-2 bg-amber-500 text-white font-bold text-xs rounded-xl shadow">등록</button>
-                    <button onclick="sendSymbolToSheet()" class="px-3 py-2 bg-emerald-600 text-white font-bold text-xs rounded-xl shadow flex items-center gap-1">
-                        <i class="fa-solid fa-paper-plane"></i>
-                        <span>전송하기</span>
-                    </button>
-                </div>
-            </div>
+function App(){
+  const [studentId, setStudentId] = useState("");
+  const [name, setName] = useState("");
+  const [group, setGroup] = useState("");
+
+  const [bookTitle, setBookTitle] = useState("");
+  const [author, setAuthor] = useState("");
+  const [reason, setReason] = useState("");
+
+  const [background, setBackground] = useState("");
+  const [impressive, setImpressive] = useState("");
+  const [opinion, setOpinion] = useState("");
+  const [tags, setTags] = useState([]);
+
+  const [question, setQuestion] = useState("");
+  const [questions, setQuestions] = useState(["", "", "", "", ""]);
+
+  const [finalTopic, setFinalTopic] = useState("");
+  const [myArgument, setMyArgument] = useState("");
+  const [peers, setPeers] = useState(["", "", "", ""]);
+
+  const [myFinalOpinion, setMyFinalOpinion] = useState("");
+  const [learned, setLearned] = useState("");
+  const [curious, setCurious] = useState("");
+  const [feeling, setFeeling] = useState("");
+
+  const [errors, setErrors] = useState({});
+  const [sending, setSending] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false);
+  const [showFail, setShowFail] = useState(false);
+  const topRef = useRef(null);
+
+  const requiredFields = [
+    ["studentId", studentId], ["name", name], ["group", group],
+    ["bookTitle", bookTitle], ["author", author], ["reason", reason],
+    ["finalTopic", finalTopic], ["myArgument", myArgument],
+    ["myFinalOpinion", myFinalOpinion], ["feeling", feeling],
+  ];
+
+  const validate = () => {
+    const newErr = {};
+    requiredFields.forEach(([key, val]) => { if(!val.trim()) newErr[key] = true; });
+    setErrors(newErr);
+    return Object.keys(newErr).length === 0;
+  };
+
+  const handleSubmit = async () => {
+    if(!validate()){
+      topRef.current?.scrollIntoView({ behavior:"smooth", block:"start" });
+      return;
+    }
+    setSending(true);
+    const payload = {
+      제출시각: new Date().toISOString(),
+      학번: studentId, 이름: name, 주제: group,
+      도서명: bookTitle, 작가: author, 책선정이유: reason,
+      사전배경지식: background, 인상적인부분: impressive, 나의의견평가: opinion, 핵심단어: tags,
+      토론하고싶은내용: question, 질문목록: questions,
+      최종토론주제: finalTopic, 내가제시한의견: myArgument, 모둠원의견: peers,
+      내의견정리: myFinalOpinion, 배운점: learned, 더알아보고싶은점: curious, 활동소감: feeling,
+    };
+    try{
+      await sendToGoogleSheet(payload);
+      setShowSuccess(true);
+    }catch(err){
+      console.error(err);
+      setShowFail(true);
+    }finally{
+      setSending(false);
+    }
+  };
+
+  const setQ = (i, v) => setQuestions(qs => qs.map((q,idx)=> idx===i? v : q));
+  const setPeer = (i, v) => setPeers(ps => ps.map((p,idx)=> idx===i? v : p));
+
+  return (
+    <div ref={topRef} className="max-w-3xl mx-auto px-4 sm:px-6 py-10 sm:py-14">
+
+      {/* 헤더 */}
+      <header className="relative text-center mb-12 pt-4">
+        <SunIcon className="w-10 h-10 absolute -top-2 left-2 sm:left-8 floaty" style={{color:'var(--sand-deep)', '--r':'-8deg'}} />
+        <WatermelonIcon className="w-9 h-9 absolute top-6 right-2 sm:right-10 floaty" style={{color:'var(--coral-deep)', animationDelay:'1s', '--r':'6deg'}} />
+        <LeafIcon className="w-8 h-8 absolute -bottom-2 left-8 sm:left-20 floaty" style={{color:'var(--green-deep)', animationDelay:'2s'}} />
+        <p className="tracking-[0.3em] text-sm font-bold mb-2" style={{color:'var(--sky-deep)'}}>SUMMER &amp; BOOKS · 가온누리 독서토론 활동지</p>
+        <h1 className="font-head title-bold text-3xl sm:text-4xl font-bold leading-snug">☀️ 여름날의 독서토론 기록장 📚</h1>
+        <p className="mt-3 text-base" style={{color:'var(--ink-soft)'}}>책 한 권과 함께, 시원한 생각을 나눠볼까요?</p>
+      </header>
+
+      {/* 학생 정보 */}
+      <section className="cute-card p-6 sm:p-8 mb-10">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
+          <Field label="학번" required>
+            <TextInput value={studentId} onChange={setStudentId} placeholder="예: 20315" error={errors.studentId}/>
+          </Field>
+          <Field label="이름" required>
+            <TextInput value={name} onChange={setName} placeholder="예: 김도담" error={errors.name}/>
+          </Field>
+          <Field label="주제" required>
+            <TextInput value={group} onChange={setGroup} placeholder="예: 인문, 경영" error={errors.group}/>
+          </Field>
         </div>
-    </div>
+      </section>
 
-    <!-- MODAL 3: Teacher Google Sheet URL Config Modal -->
-    <div id="sheetUrlModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
-        <div class="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl relative animate-rise-up">
-            <button onclick="closeSheetUrlModal()" class="absolute top-5 right-5 text-gray-400 hover:text-gray-600 text-lg">
-                <i class="fa-solid fa-xmark"></i>
-            </button>
+      {/* 1. 독서토론 전 */}
+      <StageCard tabColor="var(--sky-deep)" tabColorDeep="var(--sky-deep)"
+                 icon={<BookIcon className="w-full h-full"/>} tabLabel="독서토론 전"
+                 title="🌊 책과 만나는 시간" subtitle="함께 읽을 책을 정하고, 메모하며 읽어봐요.">
+        <SubBlock number="①" title="도서 정보" color="var(--sky-deep)">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+            <Field label="도서명 (작가)" required>
+              <TextInput value={bookTitle} onChange={setBookTitle} placeholder="예: 아몬드" error={errors.bookTitle}/>
+            </Field>
+            <Field label="작가" required>
+              <TextInput value={author} onChange={setAuthor} placeholder="예: 손원평" error={errors.author}/>
+            </Field>
+          </div>
+          <Field label="책 선정 이유" required>
+            <TextArea value={reason} onChange={setReason} placeholder="이 책을 고른 이유를 자유롭게 적어보세요." error={errors.reason}/>
+          </Field>
+        </SubBlock>
 
-            <div class="flex items-center space-x-3 mb-4">
-                <div class="p-3 bg-emerald-100 text-emerald-700 rounded-xl text-xl">
-                    <i class="fa-solid fa-file-excel"></i>
+        <SubBlock number="②" title="메모하며 독서하기" color="var(--sky-deep)">
+          <Field label="사전 배경지식">
+            <TextArea value={background} onChange={setBackground} rows={2} placeholder="책을 읽기 전 알고 있던 내용이나 관련 지식"/>
+          </Field>
+          <Field label="인상적인 부분 및 이유">
+            <TextArea value={impressive} onChange={setImpressive} placeholder="가장 인상 깊었던 장면·문장과 그 이유"/>
+          </Field>
+          <Field label="인물·사회·사건 등에 대한 나의 의견 또는 평가">
+            <TextArea value={opinion} onChange={setOpinion} placeholder="등장인물의 행동, 사회적 배경, 사건에 대한 나의 생각"/>
+          </Field>
+          <Field label="핵심 단어 선별" hint="단어를 입력하고 Enter를 누르면 태그로 추가돼요.">
+            <TagInput tags={tags} setTags={setTags} />
+          </Field>
+        </SubBlock>
+      </StageCard>
+
+      {/* 2. 독서토론 중 */}
+      <StageCard tabColor="var(--green-deep)" tabColorDeep="var(--green-deep)"
+                 icon={<DropletIcon className="w-full h-full"/>} tabLabel="독서토론 중"
+                 title="🍉 생각을 나누는 시간" subtitle="궁금했던 점을 질문으로 만들고, 모둠원과 토론해요.">
+        <SubBlock number="①" title="토론 주제 정하기" color="var(--green-deep)">
+          <Field label="책을 읽은 후 의문점 & 토론하고 싶은 내용">
+            <TextArea value={question} onChange={setQuestion} placeholder="책을 읽으며 생긴 궁금증이나 더 이야기해보고 싶은 주제"/>
+          </Field>
+          <Field label="질문 만들기">
+            <div className="space-y-2.5">
+              {questions.map((q,i)=>(
+                <div key={i} className="flex items-center gap-2.5">
+                  <span className="w-7 h-7 rounded-full flex items-center justify-center text-sm font-bold shrink-0 text-white"
+                        style={{background:'var(--green-deep)'}}>{i+1}</span>
+                  <TextInput value={q} onChange={v=>setQ(i,v)} placeholder={`질문 ${i+1}번을 적어보세요`} />
                 </div>
-                <div>
-                    <h3 class="text-lg font-bold text-gray-900">교사용 구글 스프레드시트 연동</h3>
-                    <p class="text-xs text-gray-500">Google Apps Script 웹 앱 URL을 입력하세요.</p>
-                </div>
+              ))}
             </div>
+          </Field>
+        </SubBlock>
 
-            <div class="space-y-4">
-                <div>
-                    <label class="block text-xs font-bold text-gray-700 mb-1">웹 앱 웹훅 URL (Web App URL)</label>
-                    <input type="url" id="inputSheetUrl" placeholder="https://script.google.com/macros/s/.../exec" class="w-full px-3 py-2.5 border border-gray-300 rounded-xl text-xs font-mono focus:ring-2 focus:ring-emerald-500 focus:outline-none">
-                </div>
-
-                <div class="bg-amber-50 p-3 rounded-xl border border-amber-200 text-[11px] text-amber-900 leading-relaxed">
-                    <strong>💡 참고 사항:</strong><br>
-                    - 구글 스프레드시트의 <i>[확장 프로그램] → [Apps Script]</i>에서 간단한 <code>doPost(e)</code> 웹앱을 배포하여 연동할 수 있습니다.<br>
-                    - 설정된 URL은 브라우저에 저장되며 모든 전송 버튼 및 만족도 조사 제출 시 수집 데이터가 해당 시트로 POST 전송됩니다.
-                </div>
-
-                <div class="flex justify-end space-x-2 pt-2">
-                    <button onclick="closeSheetUrlModal()" class="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-bold rounded-xl">취소</button>
-                    <button onclick="saveSheetUrl()" class="px-5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl shadow-md">저장하기</button>
-                </div>
+        <SubBlock number="②" title="토론 내용 기록하기" color="var(--green-deep)">
+          <Field label="최종 선정 토론 주제" required>
+            <TextInput value={finalTopic} onChange={setFinalTopic} placeholder="모둠이 최종적으로 선택한 토론 주제" error={errors.finalTopic}/>
+          </Field>
+          <Field label="내가 제시한 의견 (이유 및 근거 제시)" required>
+            <TextArea value={myArgument} onChange={setMyArgument} placeholder="나의 주장과 그 이유·근거를 적어보세요." error={errors.myArgument}/>
+          </Field>
+          <Field label="모둠원 의견">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {peers.map((p,i)=>(
+                <TextArea key={i} value={p} onChange={v=>setPeer(i,v)} rows={2} placeholder={`모둠원 의견 ${i+1}`} />
+              ))}
             </div>
+          </Field>
+        </SubBlock>
+      </StageCard>
+
+      {/* 3. 독서토론 후 */}
+      <StageCard tabColor="var(--sand-deep)" tabColorDeep="var(--coral-deep)"
+                 icon={<PalmIcon className="w-full h-full"/>} tabLabel="독서토론 후"
+                 title="🌴 생각을 정리하는 시간" subtitle="토론을 마치고 나의 생각을 가다듬어 봐요.">
+        <SubBlock number="①" title="내 의견 정리하기" color="var(--coral-deep)">
+          <Field label="토론 후 나의 최종 의견" required>
+            <TextArea value={myFinalOpinion} onChange={setMyFinalOpinion} placeholder="토론 전과 비교해 나의 생각이 어떻게 정리되었나요?" error={errors.myFinalOpinion}/>
+          </Field>
+        </SubBlock>
+
+        <SubBlock number="②" title="활동 마무리하기" color="var(--coral-deep)">
+          <Field label="독서토론을 통해 배운 점 또는 알게 된 점">
+            <TextArea value={learned} onChange={setLearned} rows={2} />
+          </Field>
+          <Field label="더 알아보고 싶은 점">
+            <TextArea value={curious} onChange={setCurious} rows={2} />
+          </Field>
+          <Field label="활동 소감" required>
+            <TextArea value={feeling} onChange={setFeeling} placeholder="오늘의 독서토론, 어땠나요?" error={errors.feeling}/>
+          </Field>
+        </SubBlock>
+      </StageCard>
+
+      {/* 전송 */}
+      <section className="text-center pb-4">
+        {Object.keys(errors).length>0 &&
+          <p className="mb-4 font-bold" style={{color:'var(--coral-deep)'}}>
+            ✏️ 빨간 테두리로 표시된 필수 항목을 채워주세요!
+          </p>
+        }
+        <button type="button" onClick={handleSubmit} disabled={sending}
+                className="cta-btn font-head text-white text-xl sm:text-2xl font-bold rounded-full px-12 sm:px-16 py-4 sm:py-5">
+          {sending ? "전송 중... 🌊" : "전송하기 🚀"}
+        </button>
+        <p className="mt-4 text-sm" style={{color:'var(--ink-soft)'}}>버튼을 누르면 선생님의 구글 시트로 기록이 전달돼요.</p>
+      </section>
+
+      {/* 성공 모달 */}
+      {showSuccess &&
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-6" style={{background:'rgba(62,58,52,0.45)'}}>
+          <div className="pop-in cute-card p-8 max-w-sm w-full text-center">
+            <div className="text-5xl mb-3">🍉</div>
+            <h3 className="font-head text-xl font-bold mb-2">전송 완료!</h3>
+            <p className="mb-6" style={{color:'var(--ink-soft)'}}>선생님에게 성공적으로 전달되었습니다! 🍉</p>
+            <button type="button" onClick={()=>setShowSuccess(false)}
+                    className="rounded-full px-8 py-2.5 font-head font-bold text-white"
+                    style={{background:'var(--green-deep)'}}>확인</button>
+          </div>
         </div>
-    </div>
+      }
 
-    <!-- Toast Notification Container -->
-    <div id="toast" class="fixed bottom-6 right-6 bg-charcoal-800 text-white px-5 py-3 rounded-2xl shadow-2xl text-xs font-bold flex items-center space-x-2 transform translate-y-20 opacity-0 transition-all duration-300 z-50 pointer-events-none">
-        <i id="toastIcon" class="fa-solid fa-circle-check text-emerald-400"></i>
-        <span id="toastMsg">처리되었습니다.</span>
-    </div>
-
-    <!-- Footer -->
-    <footer class="bg-charcoal-800 text-gray-400 py-10 mt-20 border-t border-gray-700">
-        <div class="max-w-7xl mx-auto px-4 text-center">
-            <div class="flex items-center justify-center space-x-2 text-amber-400 font-bold mb-3">
-                <i class="fa-solid fa-butterfly text-xl"></i>
-                <span class="text-white text-base">꽃들에게 희망을 인문토론캠프</span>
-            </div>
-            <p class="text-xs text-gray-400 max-w-md mx-auto leading-relaxed mb-4">
-                "애벌레가 날개가 될 수 있다는 가능성을 믿을 때, 비로소 세상은 진짜 꽃을 피운다."
-            </p>
-            <p class="text-[11px] text-gray-400">
-                &copy; 2026 고등학교 인문학 토론 교육 프로그램. Trina Paulus Original Work Based.
-            </p>
+      {/* 실패 모달 */}
+      {showFail &&
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-6" style={{background:'rgba(62,58,52,0.45)'}}>
+          <div className="pop-in cute-card p-8 max-w-sm w-full text-center">
+            <div className="text-5xl mb-3">🌧️</div>
+            <h3 className="font-head text-xl font-bold mb-2">전송에 실패했어요</h3>
+            <p className="mb-6" style={{color:'var(--ink-soft)'}}>네트워크 상태를 확인하거나, 선생님께 웹훅 주소 설정을 문의해 주세요.</p>
+            <button type="button" onClick={()=>setShowFail(false)}
+                    className="rounded-full px-8 py-2.5 font-head font-bold text-white"
+                    style={{background:'var(--coral-deep)'}}>확인</button>
+          </div>
         </div>
-    </footer>
-
-    <script>
-        // Global App State
-        let currentTimerSession = 1;
-        let timerSeconds = 50 * 60;
-        let timerInterval = null;
-        let isTimerRunning = false;
-
-        let googleSheetUrl = localStorage.getItem('camp_google_sheet_url') || '';
-
-        let votes = { pro: 14, con: 18 };
-        let activeSymbolTitle = '';
-        let debateOpinions = [
-            "목적 없이 남을 밝고 올라가는 경쟁은 결국 모두의 상처로 남는다.",
-            "경쟁 과정에서 최선을 다해보는 자율성 단련도 의미가 있다."
-        ];
-
-        let selectedBalanceChoice = '';
-        let selectedSurveyRating = 5;
-        let isSurveyOpen = false;
-
-        const symbolDatabase = {
-            '애벌레 기둥': [
-                "맹목적인 수능/성적 중심의 무한 경쟁 사회",
-                "남들이 모두 올라가니 두려워서 따라 올라가는 집단 심리",
-                "목적지가 어디인지 알지 못한 채 달리는 현대인의 삶"
-            ],
-            '노랑 애벌레': [
-                "타인의 시선보다 자신의 내면 소리에 귀 기울이는 존재",
-                "경쟁에서 벗어나 사랑과 연대의 가치를 찾아 나서는 용기",
-                "진정한 자아 정체성을 고민하는 청소년의 초상"
-            ],
-            '고치': [
-                "남들과 떨어져 자기 성찰에 집중하는 고독하지만 필수적인 시간",
-                "변화를 위한 준비 기간이자 묵묵한 노력의 성소",
-                "새로운 삶의 방식을 창조하기 위한 축복의 공간"
-            ],
-            '나비': [
-                "자신의 본성을 실현하고 타인에게 희망과 기쁨을 주는 존재",
-                "경쟁을 넘어 공존의 아름다움을 전파하는 자유로운 자아",
-                "나만의 독창성과 진정한 행복을 찾은 삶의 단계"
-            ]
-        };
-
-        const butterflyStorage = [
-            {
-                id: 1,
-                author: "2학년 김서연",
-                color: "from-amber-400 to-amber-600",
-                oldShed: "타인과의 비교에서 오는 열등감과 조급함",
-                newWing: "나만의 속도로 꿈을 가꾸고 스스로를 온전히 긍정하는 나비"
-            }
-        ];
-
-        // Timer Logic Functions
-        function updateTimerDisplay() {
-            const mins = Math.floor(timerSeconds / 60);
-            const secs = timerSeconds % 60;
-            const minEl = document.getElementById('timerMinutes');
-            const secEl = document.getElementById('timerSeconds');
-            if (minEl) minEl.innerText = String(mins).padStart(2, '0');
-            if (secEl) secEl.innerText = String(secs).padStart(2, '0');
-        }
-
-        function applyCustomTime() {
-            const minInput = parseInt(document.getElementById('customMinInput').value) || 0;
-            const secInput = parseInt(document.getElementById('customSecInput').value) || 0;
-            
-            clearInterval(timerInterval);
-            isTimerRunning = false;
-            
-            timerSeconds = (minInput * 60) + secInput;
-            updateTimerDisplay();
-
-            document.getElementById('timerBtnText').innerText = "타이머 시작";
-            document.getElementById('timerIcon').className = "fa-solid fa-play";
-            showToast(`⏱️ 타이머가 ${minInput}분 ${secInput}초로 설정되었습니다.`);
-        }
-
-        function toggleTimer() {
-            if (isTimerRunning) {
-                clearInterval(timerInterval);
-                isTimerRunning = false;
-                document.getElementById('timerBtnText').innerText = "타이머 재개";
-                document.getElementById('timerIcon').className = "fa-solid fa-play";
-            } else {
-                isTimerRunning = true;
-                document.getElementById('timerBtnText').innerText = "일시정지";
-                document.getElementById('timerIcon').className = "fa-solid fa-pause";
-                
-                timerInterval = setInterval(() => {
-                    if (timerSeconds > 0) {
-                        timerSeconds--;
-                        updateTimerDisplay();
-                    } else {
-                        clearInterval(timerInterval);
-                        isTimerRunning = false;
-                        showToast("⏳ 활동 시간이 종료되었습니다!");
-                    }
-                }, 1000);
-            }
-        }
-
-        function resetTimer() {
-            clearInterval(timerInterval);
-            isTimerRunning = false;
-            const defaultMin = currentTimerSession === 1 ? 50 : 50;
-            document.getElementById('customMinInput').value = defaultMin;
-            document.getElementById('customSecInput').value = 0;
-            timerSeconds = defaultMin * 60;
-            updateTimerDisplay();
-            document.getElementById('timerBtnText').innerText = "타이머 시작";
-            document.getElementById('timerIcon').className = "fa-solid fa-play";
-        }
-
-        function switchSession(sessionNum) {
-            currentTimerSession = sessionNum;
-            resetTimer();
-            if (sessionNum === 1) {
-                document.getElementById('timerSessionBadge').innerText = "1차시 진행 중";
-                document.getElementById('timerTitle').innerText = "경쟁의 기둥을 묻다";
-                document.getElementById('btnSession1').className = "px-2 py-1 text-xs rounded font-medium bg-amber-100 text-amber-800 hover:bg-amber-200";
-                document.getElementById('btnSession2').className = "px-2 py-1 text-xs rounded font-medium bg-gray-100 text-gray-600 hover:bg-gray-200";
-            } else {
-                document.getElementById('timerSessionBadge').innerText = "2차시 진행 중";
-                document.getElementById('timerTitle').innerText = "나만의 고치를 틀다";
-                document.getElementById('btnSession2').className = "px-2 py-1 text-xs rounded font-medium bg-emerald-100 text-emerald-800 hover:bg-emerald-200";
-                document.getElementById('btnSession1').className = "px-2 py-1 text-xs rounded font-medium bg-gray-100 text-gray-600 hover:bg-gray-200";
-            }
-        }
-
-        // Poll / Voting Logic
-        function updatePollUI() {
-            const total = votes.pro + votes.con;
-            const proPercent = total === 0 ? 50 : Math.round((votes.pro / total) * 100);
-            const conPercent = total === 0 ? 50 : 100 - proPercent;
-
-            const countProEl = document.getElementById('countVotePro');
-            const countConEl = document.getElementById('countVoteCon');
-            const totalTextEl = document.getElementById('totalVotesText');
-            
-            if (countProEl) countProEl.innerText = votes.pro + "표";
-            if (countConEl) countConEl.innerText = votes.con + "표";
-            if (totalTextEl) totalTextEl.innerText = `총 ${total}명 참여`;
-
-            const barPro = document.getElementById('barPro');
-            const barCon = document.getElementById('barCon');
-
-            if (barPro) {
-                barPro.style.width = proPercent + '%';
-                barPro.innerText = `찬성 ${proPercent}%`;
-            }
-            if (barCon) {
-                barCon.style.width = conPercent + '%';
-                barCon.innerText = `반대 ${conPercent}%`;
-            }
-        }
-
-        function castVote(type) {
-            if (type === 'pro') votes.pro++;
-            if (type === 'con') votes.con++;
-            updatePollUI();
-            showToast(`👍 ${type === 'pro' ? '찬성' : '반대'} 의견이 투표에 반영되었습니다.`);
-        }
-
-        function submitDebateOpinion() {
-            const input = document.getElementById('inputDebateOpinion');
-            const text = input.value.trim();
-            if (!text) {
-                showToast("⚠️ 한 줄 근거를 입력해주세요.");
-                return;
-            }
-            debateOpinions.unshift(text);
-            input.value = '';
-            renderOpinions();
-            showToast("💬 토론 한 줄 근거가 등록되었습니다.");
-        }
-
-        function renderOpinions() {
-            const list = document.getElementById('opinionList');
-            if (!list) return;
-            if (debateOpinions.length === 0) {
-                list.innerHTML = `<p class="text-xs text-gray-400 italic">등록된 한 줄 근거가 없습니다.</p>`;
-                return;
-            }
-            list.innerHTML = debateOpinions.map((op) => `
-                <div class="p-2.5 bg-amber-50 rounded-xl border border-amber-200 text-xs text-gray-800 flex items-start space-x-2">
-                    <i class="fa-solid fa-quote-left text-amber-500 mt-0.5"></i>
-                    <span class="flex-1">${op}</span>
-                </div>
-            `).join('');
-        }
-
-        // Butterfly Wall Logic
-        function generateButterfly(e) {
-            e.preventDefault();
-            const author = document.getElementById('bfAuthor').value.trim();
-            const color = document.getElementById('bfColor').value;
-            const oldShed = document.getElementById('bfOldShed').value.trim();
-            const newWing = document.getElementById('bfNewWing').value.trim();
-
-            if (!author || !oldShed || !newWing) {
-                showToast("⚠️ 모든 항목을 작성해 주세요.");
-                return;
-            }
-
-            butterflyStorage.unshift({
-                id: Date.now(),
-                author,
-                color,
-                oldShed,
-                newWing
-            });
-
-            renderButterflies();
-            showToast("🦋 멋진 희망 나비가 탄생하였습니다!");
-            
-            document.getElementById('bfAuthor').value = '';
-            document.getElementById('bfOldShed').value = '';
-            document.getElementById('bfNewWing').value = '';
-        }
-
-        function renderButterflies() {
-            const gallery = document.getElementById('butterflyGallery');
-            const countLabel = document.getElementById('butterflyCount');
-            if (!gallery) return;
-
-            if (countLabel) countLabel.innerText = `${butterflyStorage.length}마리 탄생`;
-
-            if (butterflyStorage.length === 0) {
-                gallery.innerHTML = `<div class="col-span-full text-center py-8 text-xs text-gray-400">아직 등록된 나비가 없습니다. 나만의 고치 선언문을 작성해보세요!</div>`;
-                return;
-            }
-
-            gallery.innerHTML = butterflyStorage.map(b => `
-                <div class="bg-white p-5 rounded-2xl border border-gray-100 shadow-md hover:shadow-lg transition-all relative overflow-hidden group">
-                    <div class="absolute -top-4 -right-4 w-16 h-16 bg-gradient-to-br ${b.color} rounded-full opacity-20 group-hover:scale-125 transition-transform"></div>
-                    <div class="flex items-center space-x-2 mb-2">
-                        <span class="w-8 h-8 rounded-full bg-gradient-to-tr ${b.color} text-white flex items-center justify-center text-sm shadow">
-                            <i class="fa-solid fa-butterfly"></i>
-                        </span>
-                        <span class="font-bold text-xs text-gray-800">${b.author}</span>
-                    </div>
-                    <div class="space-y-1.5 text-xs">
-                        <div class="p-2 bg-amber-50/60 rounded-lg text-amber-900 border border-amber-100/60">
-                            <strong class="text-[10px] text-amber-700 block">🍂 벗어던진 허물</strong>
-                            ${b.oldShed}
-                        </div>
-                        <div class="p-2 bg-emerald-50/60 rounded-lg text-emerald-900 border border-emerald-100/60">
-                            <strong class="text-[10px] text-emerald-700 block">🦋 펼칠 나비 날개</strong>
-                            ${b.newWing}
-                        </div>
-                    </div>
-                </div>
-            `).join('');
-        }
-
-        // Satisfaction Survey Expandable & Logic
-        function toggleSatisfactionSurvey() {
-            const content = document.getElementById('surveyContent');
-            const icon = document.getElementById('surveyToggleIcon');
-            const badge = document.getElementById('surveyBadgeState');
-
-            isSurveyOpen = !isSurveyOpen;
-
-            if (isSurveyOpen) {
-                content.classList.remove('hidden');
-                icon.classList.add('rotate-180');
-                badge.innerText = "설문 접기";
-                badge.className = "text-xs font-bold px-3 py-1.5 rounded-xl bg-gray-200 text-gray-700 shadow-sm";
-            } else {
-                content.classList.add('hidden');
-                icon.classList.remove('rotate-180');
-                badge.innerText = "클릭하여 설문 열기";
-                badge.className = "text-xs font-bold px-3 py-1.5 rounded-xl bg-amber-500 text-white shadow-sm";
-            }
-        }
-
-        function selectSurveyRating(score) {
-            selectedSurveyRating = score;
-            document.querySelectorAll('.survey-rate-btn').forEach(btn => {
-                btn.classList.remove('border-amber-500', 'bg-amber-100/60', 'ring-2', 'ring-amber-400');
-                btn.classList.add('border-gray-200', 'bg-white');
-            });
-
-            const activeBtn = document.getElementById(`rateBtn-${score}`);
-            if (activeBtn) {
-                activeBtn.classList.remove('border-gray-200', 'bg-white');
-                activeBtn.classList.add('border-amber-500', 'bg-amber-100/60', 'ring-2', 'ring-amber-400');
-            }
-        }
-
-        function submitSatisfactionSurvey(e) {
-            e.preventDefault();
-            const feedback = document.getElementById('surveyFeedback').value.trim();
-            const author = document.getElementById('surveyAuthor').value.trim() || '익명';
-            
-            const selectedActEl = document.querySelector('input[name="bestActivity"]:checked');
-            const bestActivity = selectedActEl ? selectedActEl.value : '미선택';
-
-            const payload = {
-                activity: "캠프_만족도_조사",
-                rating: selectedSurveyRating,
-                bestActivity: bestActivity,
-                feedback: feedback,
-                author: author,
-                timestamp: new Date().toLocaleString()
-            };
-
-            // Post to Google Sheet if configured
-            if (googleSheetUrl) {
-                postToGoogleSheet(payload, "📊 만족도 조사가 구글 시트로 성공적으로 전송되었습니다!");
-            } else {
-                showToast("✨ 만족도 조사가 제출되었습니다. 참여해주셔서 감사합니다!");
-            }
-
-            // Reset Form & Collapse
-            document.getElementById('surveyFeedback').value = '';
-            document.getElementById('surveyAuthor').value = '';
-            toggleSatisfactionSurvey();
-        }
-
-        // Symbol Modal Logic
-        function openSymbolModal(title) {
-            activeSymbolTitle = title;
-            document.getElementById('symbolModalTitle').innerText = `상징: ${title}`;
-            renderSymbolModalList();
-            document.getElementById('symbolModal').classList.remove('hidden');
-        }
-
-        function closeSymbolModal() {
-            document.getElementById('symbolModal').classList.add('hidden');
-        }
-
-        function renderSymbolModalList() {
-            const list = document.getElementById('symbolModalList');
-            if (!list) return;
-            const defs = symbolDatabase[activeSymbolTitle] || [];
-            
-            if (defs.length === 0) {
-                list.innerHTML = `<p class="text-gray-400 italic">아직 작성된 해석이 없습니다.</p>`;
-                return;
-            }
-
-            list.innerHTML = defs.map((def, idx) => `
-                <div class="p-2 bg-white rounded-lg border border-amber-200/60 flex items-start space-x-2">
-                    <span class="font-bold text-amber-600 shrink-0">${idx + 1}.</span>
-                    <span class="text-gray-700">${def}</span>
-                </div>
-            `).join('');
-        }
-
-        function addSymbolDefinition() {
-            const input = document.getElementById('inputNewSymbolDef');
-            const text = input.value.trim();
-            if (!text) {
-                showToast("⚠️ 해석 내용을 입력해주세요.");
-                return;
-            }
-
-            if (!symbolDatabase[activeSymbolTitle]) {
-                symbolDatabase[activeSymbolTitle] = [];
-            }
-
-            symbolDatabase[activeSymbolTitle].push(text);
-            input.value = '';
-            renderSymbolModalList();
-            showToast(`✨ [${activeSymbolTitle}]에 새 해석이 추가되었습니다.`);
-        }
-
-        // Google Sheet Integration & Transmission
-        function postToGoogleSheet(payload, successMsg) {
-            if (!googleSheetUrl) {
-                openSheetUrlModal();
-                showToast("⚠️ 먼저 교사용 구글 스프레드시트 URL을 설정해주세요.");
-                return;
-            }
-
-            fetch(googleSheetUrl, {
-                method: 'POST',
-                mode: 'no-cors',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
-            }).then(() => {
-                showToast(successMsg || "📊 구글 스프레드시트로 성공적으로 전송되었습니다!");
-            }).catch(err => {
-                console.error("Sheet Transmission Error:", err);
-                showToast("❌ 전송 실패: 네트워크 연동 상태를 확인해 주세요.");
-            });
-        }
-
-        function openSheetUrlModal() {
-            document.getElementById('inputSheetUrl').value = googleSheetUrl;
-            document.getElementById('sheetUrlModal').classList.remove('hidden');
-        }
-
-        function closeSheetUrlModal() {
-            document.getElementById('sheetUrlModal').classList.add('hidden');
-        }
-
-        function saveSheetUrl() {
-            const url = document.getElementById('inputSheetUrl').value.trim();
-            googleSheetUrl = url;
-            localStorage.setItem('camp_google_sheet_url', url);
-            updateSheetStatusUI();
-            closeSheetUrlModal();
-            showToast(url ? "✅ 구글 시트 연동 URL이 저장되었습니다!" : "ℹ️ 시트 연동 URL이 해제되었습니다.");
-        }
-
-        function updateSheetStatusUI() {
-            const lbl = document.getElementById('sheetStatusLabel');
-            if (!lbl) return;
-            if (googleSheetUrl) {
-                lbl.innerText = "시트 연동 완료";
-                lbl.classList.add("text-emerald-700");
-            } else {
-                lbl.innerText = "구글 시트 연동 설정";
-                lbl.classList.remove("text-emerald-700");
-            }
-        }
-
-        function sendDebateToSheet() {
-            const input = document.getElementById('inputDebateOpinion');
-            const opinion = input.value.trim();
-            if (!opinion) {
-                showToast("⚠️ 전송할 한 줄 근거를 작성해주세요.");
-                return;
-            }
-            const payload = {
-                activity: "1차시_입체토론_근거",
-                opinion: opinion,
-                timestamp: new Date().toLocaleString()
-            };
-            postToGoogleSheet(payload, "📊 [1차시 입체토론] 근거가 스프레드시트로 전송되었습니다!");
-        }
-
-        function sendSymbolToSheet() {
-            const input = document.getElementById('inputNewSymbolDef');
-            const defText = input.value.trim();
-            if (!defText) {
-                showToast("⚠️ 상징 해석을 입력해 주세요.");
-                return;
-            }
-            const payload = {
-                activity: "1차시_상징정의",
-                symbol: activeSymbolTitle,
-                definition: defText,
-                timestamp: new Date().toLocaleString()
-            };
-            postToGoogleSheet(payload, `📊 [1차시 상징:${activeSymbolTitle}] 정의가 전송되었습니다!`);
-        }
-
-        function sendButterflyToSheet() {
-            const author = document.getElementById('bfAuthor').value.trim();
-            const oldShed = document.getElementById('bfOldShed').value.trim();
-            const newWing = document.getElementById('bfNewWing').value.trim();
-
-            if (!author || !oldShed || !newWing) {
-                showToast("⚠️ 나비 선언문의 작성자, 허물, 날개 항목을 모두 입력해주세요.");
-                return;
-            }
-
-            const payload = {
-                activity: "2차시_고치선언문",
-                author: author,
-                choice: selectedBalanceChoice || "미선택",
-                oldShed: oldShed,
-                newWing: newWing,
-                timestamp: new Date().toLocaleString()
-            };
-
-            postToGoogleSheet(payload, "🦋 [2차시 고치선언문] 내용이 스프레드시트로 전송되었습니다!");
-        }
-
-        function sendWorksheetToSheet() {
-            const author = document.getElementById('wsAuthor').value.trim();
-            const scene = document.getElementById('wsScene').value.trim();
-            const question = document.getElementById('wsQuestion').value.trim();
-            const symbolDef = document.getElementById('wsSymbolDef').value.trim();
-
-            if (!author) {
-                showToast("⚠️ 작성자 이름/학번을 작성해 주세요.");
-                return;
-            }
-
-            const payload = {
-                activity: "사전_활동지",
-                author: author,
-                scene: scene,
-                question: question,
-                symbolDefinition: symbolDef,
-                timestamp: new Date().toLocaleString()
-            };
-
-            postToGoogleSheet(payload, "📋 [사전활동지]가 성공적으로 스프레드시트로 전송되었습니다!");
-        }
-
-        function selectBalanceChoice(choice) {
-            selectedBalanceChoice = choice === 'A' ? 'A (호랑 애벌레 - 내부개혁형)' : 'B (노랑 애벌레 - 외부변혁형)';
-            const fb = document.getElementById('balanceFeedback');
-            fb.classList.remove('hidden');
-            if (choice === 'A') {
-                fb.innerText = "💡 [호랑 애벌레의 길] 선택 완료: 꼭대기에 직접 올라가 허무를 검증하고 사회적 사명을 다하려는 리더십 관점입니다.";
-            } else {
-                fb.innerText = "💡 [노랑 애벌레의 길] 선택 완료: 타성에서 벗어나 스스로 나비가 됨으로써 근본적인 대체적 삶을 제시하는 지혜 관점입니다.";
-            }
-            showToast('가치관 선택이 저장되었습니다.');
-        }
-
-        function openWorksheetModal() {
-            document.getElementById('wsDate').value = new Date().toLocaleDateString('ko-KR');
-            document.getElementById('worksheetModal').classList.remove('hidden');
-        }
-
-        function closeWorksheetModal() {
-            document.getElementById('worksheetModal').classList.add('hidden');
-        }
-
-        function saveWorksheet(e) {
-            e.preventDefault();
-            closeWorksheetModal();
-            showToast('📋 사전 활동지가 저장이 등록되었습니다.');
-        }
-
-        function showToast(msg) {
-            const toast = document.getElementById('toast');
-            const toastMsg = document.getElementById('toastMsg');
-            if (!toast || !toastMsg) return;
-
-            toastMsg.innerText = msg;
-            toast.classList.remove('translate-y-20', 'opacity-0');
-            toast.classList.add('translate-y-0', 'opacity-100');
-
-            setTimeout(() => {
-                toast.classList.remove('translate-y-0', 'opacity-100');
-                toast.classList.add('translate-y-20', 'opacity-0');
-            }, 3000);
-        }
-
-        // Initialization on Load
-        window.onload = function() {
-            updateTimerDisplay();
-            updatePollUI();
-            renderOpinions();
-            renderButterflies();
-            updateSheetStatusUI();
-            selectSurveyRating(5);
-        };
-    </script>
+      }
+
+      <footer className="text-center text-sm mt-6" style={{color:'var(--ink-soft)'}}>
+        📚 여름과 책 · 가온누리 독서토론 학습지
+      </footer>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+</script>
 </body>
 </html>
