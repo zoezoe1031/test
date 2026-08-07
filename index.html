@@ -282,7 +282,7 @@ function TagInput({ tags, setTags, error }){
 // ⚠️ 선생님용 설정: 구글 앱스 스크립트(Google Apps Script) 웹앱 배포 URL을 아래에 넣어주세요.
 // Google Sheets 확장 프로그램 > Apps Script 에서 doPost(e) 함수를 작성하고
 // "배포 > 웹 앱으로 배포"한 뒤 생성되는 URL을 여기에 붙여넣으면 됩니다.
-const WEBHOOK_URL = "https://script.google.com/macros/s/AKfycbycWWXwYiDpOKM8tg-SG7OVFS6xt17hxmpjsnKenowbZRe1Wh0JbQrkuPlOlPKh3eDr6Q/exec";
+const WEBHOOK_URL = "https://script.google.com/macros/s/AKfycbxvTtGy4m9-DV3dS80Xuj81mPsquvJwQH6d9A4YoJQuMZAce7t55CEPrCVnbNANiBM/exec";
 
 async function sendToGoogleSheet(payload){
   // Apps Script 웹앱은 보통 CORS 응답 헤더를 주지 않기 때문에 no-cors 모드로 전송합니다.
