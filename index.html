@@ -286,11 +286,13 @@ const WEBHOOK_URL = "https://script.google.com/macros/s/AKfycbycWWXwYiDpOKM8tg-S
 
 async function sendToGoogleSheet(payload){
   // Apps Script 웹앱은 보통 CORS 응답 헤더를 주지 않기 때문에 no-cors 모드로 전송합니다.
-  // no-cors 모드에서는 응답 내용을 읽을 수 없어, 네트워크 예외가 없으면 전송 성공으로 간주합니다.
+  // no-cors 모드에서는 'application/json' 같은 비표준 Content-Type을 쓰면 요청이 제대로
+  // 전달되지 않을 수 있어, CORS-safelisted 값인 text/plain으로 보냅니다.
+  // (본문 내용 자체는 JSON 문자열 그대로이며, Apps Script 쪽에서 JSON.parse로 해석합니다.)
   await fetch(WEBHOOK_URL, {
     method: "POST",
     mode: "no-cors",
-    headers: { "Content-Type": "application/json" },
+    headers: { "Content-Type": "text/plain;charset=utf-8" },
     body: JSON.stringify(payload),
   });
 }
